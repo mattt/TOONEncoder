@@ -1222,7 +1222,7 @@ struct TOONEncoderTests {
     @Test func dateConversion() async throws {
         let date = Date(timeIntervalSince1970: 0)
         let dateResult = String(data: try encoder.encode(date), encoding: .utf8)!
-        #expect(dateResult.contains("1970-01-01T00:00:00.000Z"))
+        #expect(dateResult.contains("\"1970-01-01T00:00:00.000Z\""))
 
         struct DateObject: Codable {
             let created: Date
@@ -1236,7 +1236,7 @@ struct TOONEncoderTests {
     @Test func urlConversion() async throws {
         let url = URL(string: "https://example.com")!
         let urlResult = String(data: try encoder.encode(url), encoding: .utf8)!
-        #expect(urlResult.contains("https://example.com"))
+        #expect(urlResult.contains("\"https://example.com\""))
 
         struct URLObject: Codable {
             let url: URL
@@ -1244,7 +1244,7 @@ struct TOONEncoderTests {
 
         let urlObj = URLObject(url: url)
         let urlObjResult = String(data: try encoder.encode(urlObj), encoding: .utf8)!
-        #expect(urlObjResult.contains("url: https://example.com"))
+        #expect(urlObjResult.contains("url: \"https://example.com\""))
     }
 
     @Test func dataConversion() async throws {
@@ -1258,7 +1258,7 @@ struct TOONEncoderTests {
 
         let dataObj = DataObject(data: data)
         let dataObjResult = String(data: try encoder.encode(dataObj), encoding: .utf8)!
-        #expect(dataObjResult.contains("data: \"aGVsbG8=\""))
+        #expect(dataObjResult.contains("data: aGVsbG8="))
     }
 
     @Test func nonFiniteNumbers() async throws {
