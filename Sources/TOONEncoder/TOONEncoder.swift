@@ -517,15 +517,12 @@ public final class TOONEncoder {
             let iso8601 = ISO8601DateFormatter()
             iso8601.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             let dateString = iso8601.string(from: date)
-            // Dates are quoted in objects, unquoted at root
-            return inObject ? "\"\(dateString)\"" : dateString
+            return encodeStringLiteral(dateString, delimiter: delimiter)
         case .url(let url):
-            // URLs are never quoted
-            return url.absoluteString
+            return encodeStringLiteral(url.absoluteString, delimiter: delimiter)
         case .data(let data):
             let base64 = data.base64EncodedString()
-            // Data is quoted in objects, unquoted at root
-            return inObject ? "\"\(base64)\"" : base64
+            return encodeStringLiteral(base64, delimiter: delimiter)
         case .array, .object:
             return nil
         }
