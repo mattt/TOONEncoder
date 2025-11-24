@@ -1358,4 +1358,168 @@ struct TOONEncoderTests {
         let simpleResult = String(data: try encoder.encode(simpleObj), encoding: .utf8)!
         #expect(!simpleResult.hasSuffix("\n"))
     }
+
+    // MARK: - Key Folding (TOON 2.1)
+
+    @Test func keyFoldingDisabled() async throws {
+        struct NestedObject: Codable {
+            struct User: Codable {
+                struct Profile: Codable {
+                    let name: String
+                }
+                let profile: Profile
+            }
+            let user: User
+        }
+
+        let encoder = TOONEncoder()
+        encoder.keyFolding = .disabled
+
+        let obj = NestedObject(user: .init(profile: .init(name: "Ada")))
+        let result = String(data: try encoder.encode(obj), encoding: .utf8)!
+
+        let expected = """
+        user:
+          profile:
+            name: Ada
+        """
+        #expect(result == expected)
+    }
+
+    @Test func keyFoldingSafe() async throws {
+        struct NestedObject: Codable {
+            struct User: Codable {
+                struct Profile: Codable {
+                    let name: String
+                }
+                let profile: Profile
+            }
+            let user: User
+        }
+
+        let encoder = TOONEncoder()
+        encoder.keyFolding = .safe
+
+        let obj = NestedObject(user: .init(profile: .init(name: "Ada")))
+        let result = String(data: try encoder.encode(obj), encoding: .utf8)!
+
+        let expected = """
+        user.profile.name: Ada
+        """
+        #expect(result == expected)
+    }
+
+    @Test func keyFoldingWithMultipleFields() async throws {
+        struct Config: Codable {
+            struct Database: Codable {
+                struct Connection: Codable {
+                    let host: String
+                    let port: Int
+                }
+                let connection: Connection
+            }
+            struct API: Codable {
+                let key: String
+            }
+            let database: Database
+            let api: API
+        }
+
+        let encoder = TOONEncoder()
+        encoder.keyFolding = .safe
+
+        let obj = Config(
+            database: .init(connection: .init(host: "localhost", port: 5432)),
+            api: .init(key: "secret")
+        )
+        let result = String(data: try encoder.encode(obj), encoding: .utf8)!
+
+        let expected = """
+        database.connection:
+          host: localhost
+          port: 5432
+        api.key: secret
+        """
+        #expect(result == expected)
+    }
+
+    @Test func keyFoldingStopsAtInvalidIdentifier() async throws {
+        // Keys with hyphens cannot be folded
+        struct ValidThenInvalid: Codable {
+            struct Data: Codable {
+                struct UserInfo: Codable {
+                    let field1: String
+
+                    enum CodingKeys: String, CodingKey {
+                        case field1 = "field-1"
+                    }
+                }
+                let userInfo: UserInfo
+
+                enum CodingKeys: String, CodingKey {
+                    case userInfo = "user-info"
+                }
+            }
+            let data: Data
+        }
+
+        let encoder = TOONEncoder()
+        encoder.keyFolding = .safe
+
+        let obj = ValidThenInvalid(data: .init(userInfo: .init(field1: "value")))
+        let result = String(data: try encoder.encode(obj), encoding: .utf8)!
+
+        // Should fold "data" but stop at "user-info" because it contains hyphen
+        let expected = """
+        data:
+          "user-info":
+            "field-1": value
+        """
+        #expect(result == expected)
+    }
+
+    @Test func keyFoldingWithArray() async throws {
+        struct Container: Codable {
+            struct Wrapper: Codable {
+                let items: [Int]
+            }
+            let wrapper: Wrapper
+        }
+
+        let encoder = TOONEncoder()
+        encoder.keyFolding = .safe
+
+        let obj = Container(wrapper: .init(items: [1, 2, 3]))
+        let result = String(data: try encoder.encode(obj), encoding: .utf8)!
+
+        let expected = """
+        wrapper.items[3]: 1,2,3
+        """
+        #expect(result == expected)
+    }
+
+    @Test func versionDeclaration() async throws {
+        #expect(TOONEncoder.specVersion == "2.1")
+    }
+
+    @Test func canonicalNumberFormat() async throws {
+        // TOON 2.1 requires canonical decimal form: no trailing fractional zeros
+        struct Numbers: Codable {
+            let a: Double
+            let b: Double
+            let c: Double
+            let d: Double
+        }
+
+        let obj = Numbers(a: 1.5, b: 2.0, c: 0.1, d: 123.456)
+        let result = String(data: try encoder.encode(obj), encoding: .utf8)!
+
+        let expected = """
+        a: 1.5
+        b: 2
+        c: 0.1
+        d: 123.456
+        """
+        #expect(result == expected)
+    }
 }

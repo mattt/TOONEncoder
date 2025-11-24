@@ -1,7 +1,9 @@
 # TOONEncoder
 
-A Swift encoder for [TOON](https://github.com/johannschopplich/toon) (Token-Oriented Object Notation),
+A Swift encoder for [TOON](https://github.com/toon-format/spec) (Token-Oriented Object Notation),
 a compact format designed to reduce LLM token usage by 30–60% compared to JSON.
+
+This implementation conforms to **TOON specification version 2.1**.
 
 LLM tokens have a cost, and JSON is verbose.
 TOON saves tokens while remaining human-readable by
@@ -24,8 +26,8 @@ users[2]{id,name,role}:
   2,Bob,user
 ```
 
-For full details on TOON's design, benchmarks, and specification, 
-see the [TOON project README](https://github.com/johannschopplich/toon).
+For full details on TOON's design, benchmarks, and specification,
+see the [TOON specification](https://github.com/toon-format/spec).
 
 ## Requirements
 
@@ -185,6 +187,80 @@ Output:
 pairs[2]:
   - [2]: 1,2
   - [2]: 3,4
+```
+
+### Key Folding (TOON 2.1)
+
+Key folding collapses single-key nested objects into dotted paths, reducing indentation and token count:
+
+```swift
+struct Config: Codable {
+    struct Database: Codable {
+        struct Connection: Codable {
+            let host: String
+            let port: Int
+        }
+        let connection: Connection
+    }
+    let database: Database
+}
+
+let config = Config(
+    database: .init(
+        connection: .init(host: "localhost", port: 5432)
+    )
+)
+
+let encoder = TOONEncoder()
+encoder.keyFolding = .safe
+let data = try encoder.encode(config)
+```
+
+Without key folding:
+```
+database:
+  connection:
+    host: localhost
+    port: 5432
+```
+
+With key folding (`.safe`):
+```
+database.connection:
+  host: localhost
+  port: 5432
+```
+
+Key folding only applies when:
+- All path segments are valid identifiers (start with letter/underscore, contain only alphanumerics/underscores)
+- The folding chain consists of single-key objects
+- Using `.safe` mode ensures collision avoidance
+
+## TOON 2.1 Compliance
+
+This encoder implements the following TOON 2.1 features:
+
+### Core Features
+- ✅ Canonical number formatting (no trailing zeros, no leading zeros except '0', -0 normalized to 0)
+- ✅ Proper escape sequences for strings (`\\`, `\"`, `\n`, `\r`, `\t`)
+- ✅ Three delimiter types: comma (default), tab, pipe
+- ✅ Array length validation
+- ✅ Object key order preservation
+- ✅ Array order preservation
+- ✅ Tabular format for uniform object arrays
+- ✅ Inline format for primitive arrays
+- ✅ Expanded list format for nested structures
+
+### Optional Features (TOON 2.1)
+- ✅ **Key Folding** (`.safe` mode): Collapses single-key object chains into dotted paths
+- ⚠️ **Path Expansion**: Not implemented (encoder-only, used during decoding)
+
+### Version Information
+
+You can check the supported TOON specification version:
+
+```swift
+print(TOONEncoder.specVersion) // "2.1"
 ```
 
 ## License
