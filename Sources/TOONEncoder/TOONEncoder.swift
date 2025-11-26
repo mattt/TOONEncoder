@@ -2,12 +2,12 @@ import Foundation
 
 /// An encoder that converts Swift values to TOON format
 ///
-/// This encoder conforms to the TOON (Token-Oriented Object Notation) specification version 2.1.
+/// This encoder conforms to the TOON (Token-Oriented Object Notation) specification version 3.0.
 /// For more information, see: https://github.com/toon-format/spec
 public final class TOONEncoder {
 
     /// The TOON specification version this encoder conforms to
-    public static let specVersion = "2.1"
+    public static let specVersion = "3.0"
 
     /// Number of spaces per indentation level
     public var indent: Int = 2
@@ -29,6 +29,21 @@ public final class TOONEncoder {
     /// user.profile.age: 30
     /// ```
     public var keyFolding: KeyFolding = .disabled
+
+    /// Maximum number of segments to include in a folded path when `keyFolding` is `.safe`.
+    ///
+    /// Controls how many nested single-key objects are collapsed into a dotted path.
+    /// - Default is `Int.max` (unlimited folding depth)
+    /// - Values less than 2 have no practical folding effect
+    ///
+    /// Example with `flattenDepth = 2`:
+    /// - Input: `{ a: { b: { c: { d: 1 } } } }`
+    /// - Output: `a.b:` followed by nested `c:` and `d: 1`
+    ///
+    /// Example with `flattenDepth = Int.max` (default):
+    /// - Input: `{ a: { b: { c: 1 } } }`
+    /// - Output: `a.b.c: 1`
+    public var flattenDepth: Int = .max
 
     /// Path expansion mode for expanding dotted paths back into nested objects
     ///
@@ -118,6 +133,7 @@ public final class TOONEncoder {
     /// - `delimiter`: `.comma`
     /// - `lengthMarker`: `.none`
     /// - `keyFolding`: `.disabled`
+    /// - `flattenDepth`: `Int.max`
     /// - `expandPaths`: `.disabled`
     public init() {}
 
@@ -180,27 +196,49 @@ public final class TOONEncoder {
         _ values: [String: Value],
         keyOrder: [String],
         output: inout [String],
-        depth: Int
+        depth: Int,
+        allowFolding: Bool = true
     ) {
         for key in keyOrder {
             guard let value = values[key] else { continue }
-            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth)
+            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth, siblingKeys: keyOrder, allowFolding: allowFolding)
         }
     }
 
+    /// Result of a key folding attempt
+    private struct FoldResult {
+        let path: String
+        let value: Value
+        let hitDepthLimit: Bool  // True if we stopped due to flattenDepth limit
+    }
+
     /// Attempts to fold a key path by following single-key object chains
-    /// Returns the folded path and the final value, or nil if folding is not safe
-    private func tryFoldKeyPath(key: String, value: Value) -> (path: String, value: Value)? {
+    /// Returns the folded path, final value, and whether we hit the depth limit, or nil if folding is not safe
+    /// - Parameters:
+    ///   - key: The starting key of the chain
+    ///   - value: The value associated with the key
+    ///   - siblingKeys: Other keys at the same object depth (for collision avoidance)
+    private func tryFoldKeyPath(key: String, value: Value, siblingKeys: [String] = []) -> FoldResult? {
         guard keyFolding == .safe else { return nil }
+
+        // Values less than 2 have no practical folding effect
+        guard flattenDepth >= 2 else { return nil }
 
         var pathComponents: [String] = [key]
         var currentValue = value
+        var hitDepthLimit = false
 
-        // Follow the chain of single-key objects
+        // Follow the chain of single-key objects, respecting flattenDepth limit
         while case .object(let nestedValues, let nestedKeyOrder) = currentValue,
               nestedKeyOrder.count == 1,
               let singleKey = nestedKeyOrder.first,
               let nextValue = nestedValues[singleKey] {
+
+            // Stop if we've reached the flattenDepth limit
+            guard pathComponents.count < flattenDepth else {
+                hitDepthLimit = true
+                break
+            }
 
             // Validate that the key is a safe identifier
             guard singleKey.isValidIdentifierSegment else {
@@ -220,28 +258,37 @@ public final class TOONEncoder {
         }
 
         let foldedPath = pathComponents.joined(separator: ".")
-        return (foldedPath, currentValue)
+
+        // Collision avoidance: folded key must not equal any existing sibling key
+        if siblingKeys.contains(foldedPath) {
+            return nil
+        }
+
+        return FoldResult(path: foldedPath, value: currentValue, hitDepthLimit: hitDepthLimit)
     }
 
-    private func encodeKeyValuePair(key: String, value: Value, output: inout [String], depth: Int) {
-        // Try key folding if enabled
-        if let (foldedPath, foldedValue) = tryFoldKeyPath(key: key, value: value) {
-            let encodedKey = encodeKey(foldedPath)
-            switch foldedValue {
+    private func encodeKeyValuePair(key: String, value: Value, output: inout [String], depth: Int, siblingKeys: [String] = [], allowFolding: Bool = true) {
+        // Try key folding if enabled and allowed
+        if allowFolding, let foldResult = tryFoldKeyPath(key: key, value: value, siblingKeys: siblingKeys) {
+            let encodedKey = encodeKey(foldResult.path)
+            // If we hit the depth limit, remaining nested objects should NOT be folded
+            let allowNestedFolding = !foldResult.hitDepthLimit
+
+            switch foldResult.value {
             case .null, .bool, .int, .double, .string, .date, .url, .data:
-                if let encodedValue = encodePrimitive(foldedValue, delimiter: delimiter.rawValue, inObject: true) {
+                if let encodedValue = encodePrimitive(foldResult.value, delimiter: delimiter.rawValue, inObject: true) {
                     write(depth: depth, content: "\(encodedKey): \(encodedValue)", to: &output)
                 }
 
             case .array(let array):
-                encodeArray(key: foldedPath, array: array, output: &output, depth: depth)
+                encodeArray(key: foldResult.path, array: array, output: &output, depth: depth)
 
             case .object(let values, let keyOrder):
                 if keyOrder.isEmpty {
                     write(depth: depth, content: "\(encodedKey):", to: &output)
                 } else {
                     write(depth: depth, content: "\(encodedKey):", to: &output)
-                    encodeObject(values, keyOrder: keyOrder, output: &output, depth: depth + 1)
+                    encodeObject(values, keyOrder: keyOrder, output: &output, depth: depth + 1, allowFolding: allowNestedFolding)
                 }
             }
             return
@@ -388,7 +435,7 @@ public final class TOONEncoder {
         for i in 1 ..< keyOrder.count {
             let key = keyOrder[i]
             guard let value = values[key] else { continue }
-            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth + 1)
+            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth + 1, siblingKeys: keyOrder)
         }
     }
 
