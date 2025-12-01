@@ -1,0 +1,8 @@
+# Default owners for everything
+* @toon-format/swift-maintainers
+
+# Project governance and documentation
+CODE_OF_CONDUCT.md @johannschopplich
+CONTRIBUTING.md @johannschopplich
+LICENSE @mattt
+README.md @mattt
