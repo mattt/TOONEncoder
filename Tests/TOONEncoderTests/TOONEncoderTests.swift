@@ -1359,7 +1359,7 @@ struct TOONEncoderTests {
         #expect(!simpleResult.hasSuffix("\n"))
     }
 
-    // MARK: - Key Folding (TOON 2.1)
+    // MARK: - Key Folding Tests (TOON 2.1+)
 
     @Test func keyFoldingDisabled() async throws {
         struct NestedObject: Codable {
@@ -1503,7 +1503,7 @@ struct TOONEncoderTests {
     }
 
     @Test func canonicalNumberFormat() async throws {
-        // TOON 2.1 requires canonical decimal form: no trailing fractional zeros
+        // TOON specification requires canonical decimal form: no trailing fractional zeros
         struct Numbers: Codable {
             let a: Double
             let b: Double

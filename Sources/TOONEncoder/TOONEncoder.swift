@@ -278,10 +278,8 @@ public final class TOONEncoder {
                 encodeArray(key: path, array: array, output: &output, depth: depth)
 
             case .object(let values, let keyOrder):
-                if keyOrder.isEmpty {
-                    write(depth: depth, content: "\(encodedKey):", to: &output)
-                } else {
-                    write(depth: depth, content: "\(encodedKey):", to: &output)
+                write(depth: depth, content: "\(encodedKey):", to: &output)
+                if !keyOrder.isEmpty {
                     encodeObject(
                         values,
                         keyOrder: keyOrder,
