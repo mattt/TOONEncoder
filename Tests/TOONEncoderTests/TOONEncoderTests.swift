@@ -1379,10 +1379,10 @@ struct TOONEncoderTests {
         let result = String(data: try encoder.encode(obj), encoding: .utf8)!
 
         let expected = """
-        user:
-          profile:
-            name: Ada
-        """
+            user:
+              profile:
+                name: Ada
+            """
         #expect(result == expected)
     }
 
@@ -1404,8 +1404,8 @@ struct TOONEncoderTests {
         let result = String(data: try encoder.encode(obj), encoding: .utf8)!
 
         let expected = """
-        user.profile.name: Ada
-        """
+            user.profile.name: Ada
+            """
         #expect(result == expected)
     }
 
@@ -1435,11 +1435,11 @@ struct TOONEncoderTests {
         let result = String(data: try encoder.encode(obj), encoding: .utf8)!
 
         let expected = """
-        database.connection:
-          host: localhost
-          port: 5432
-        api.key: secret
-        """
+            database.connection:
+              host: localhost
+              port: 5432
+            api.key: secret
+            """
         #expect(result == expected)
     }
 
@@ -1471,10 +1471,10 @@ struct TOONEncoderTests {
 
         // Should fold "data" but stop at "user-info" because it contains hyphen
         let expected = """
-        data:
-          "user-info":
-            "field-1": value
-        """
+            data:
+              "user-info":
+                "field-1": value
+            """
         #expect(result == expected)
     }
 
@@ -1493,8 +1493,8 @@ struct TOONEncoderTests {
         let result = String(data: try encoder.encode(obj), encoding: .utf8)!
 
         let expected = """
-        wrapper.items[3]: 1,2,3
-        """
+            wrapper.items[3]: 1,2,3
+            """
         #expect(result == expected)
     }
 
@@ -1515,11 +1515,11 @@ struct TOONEncoderTests {
         let result = String(data: try encoder.encode(obj), encoding: .utf8)!
 
         let expected = """
-        a: 1.5
-        b: 2
-        c: 0.1
-        d: 123.456
-        """
+            a: 1.5
+            b: 2
+            c: 0.1
+            d: 123.456
+            """
         #expect(result == expected)
     }
 
@@ -1548,8 +1548,8 @@ struct TOONEncoderTests {
 
         // All levels should be folded into a single dotted path
         let expected = """
-        level1.level2.level3.value: 42
-        """
+            level1.level2.level3.value: 42
+            """
         #expect(result == expected)
     }
 
@@ -1576,10 +1576,10 @@ struct TOONEncoderTests {
 
         // Only first 2 levels should be folded
         let expected = """
-        level1.level2:
-          level3:
-            value: 42
-        """
+            level1.level2:
+              level3:
+                value: 42
+            """
         #expect(result == expected)
     }
 
@@ -1606,9 +1606,9 @@ struct TOONEncoderTests {
 
         // First 3 levels should be folded
         let expected = """
-        level1.level2.level3:
-          value: 42
-        """
+            level1.level2.level3:
+              value: 42
+            """
         #expect(result == expected)
     }
 
@@ -1630,9 +1630,9 @@ struct TOONEncoderTests {
 
         // Should not fold because flattenDepth < 2
         let expected = """
-        user:
-          name: Ada
-        """
+            user:
+              name: Ada
+            """
         #expect(result == expected)
     }
 
@@ -1650,8 +1650,8 @@ struct TOONEncoderTests {
             struct Nested: Codable {
                 let b: Int
             }
-            let ab: Int   // Will be encoded as "a.b" (literal dotted key)
-            let a: Nested // Would be folded to "a.b" if not for collision
+            let ab: Int  // Will be encoded as "a.b" (literal dotted key)
+            let a: Nested  // Would be folded to "a.b" if not for collision
 
             enum CodingKeys: String, CodingKey {
                 case ab = "a.b"
@@ -1665,10 +1665,10 @@ struct TOONEncoderTests {
         // "a" should NOT be folded to "a.b" because "a.b" exists as a sibling
         // Note: "a.b" is a valid unquoted key per spec (pattern allows dots)
         let expected = """
-        a.b: 1
-        a:
-          b: 2
-        """
+            a.b: 1
+            a:
+              b: 2
+            """
         #expect(result == expected)
     }
 
@@ -1690,9 +1690,9 @@ struct TOONEncoderTests {
 
         // "a" should be folded to "a.b" since there's no collision
         let expected = """
-        a.b: 1
-        c: 2
-        """
+            a.b: 1
+            c: 2
+            """
         #expect(result == expected)
     }
 }

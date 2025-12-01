@@ -201,7 +201,14 @@ public final class TOONEncoder {
     ) {
         for key in keyOrder {
             guard let value = values[key] else { continue }
-            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth, siblingKeys: keyOrder, allowFolding: allowFolding)
+            encodeKeyValuePair(
+                key: key,
+                value: value,
+                output: &output,
+                depth: depth,
+                siblingKeys: keyOrder,
+                allowFolding: allowFolding
+            )
         }
     }
 
@@ -230,9 +237,10 @@ public final class TOONEncoder {
 
         // Follow the chain of single-key objects, respecting flattenDepth limit
         while case .object(let nestedValues, let nestedKeyOrder) = currentValue,
-              nestedKeyOrder.count == 1,
-              let singleKey = nestedKeyOrder.first,
-              let nextValue = nestedValues[singleKey] {
+            nestedKeyOrder.count == 1,
+            let singleKey = nestedKeyOrder.first,
+            let nextValue = nestedValues[singleKey]
+        {
 
             // Stop if we've reached the flattenDepth limit
             guard pathComponents.count < flattenDepth else {
@@ -267,7 +275,14 @@ public final class TOONEncoder {
         return FoldResult(path: foldedPath, value: currentValue, hitDepthLimit: hitDepthLimit)
     }
 
-    private func encodeKeyValuePair(key: String, value: Value, output: inout [String], depth: Int, siblingKeys: [String] = [], allowFolding: Bool = true) {
+    private func encodeKeyValuePair(
+        key: String,
+        value: Value,
+        output: inout [String],
+        depth: Int,
+        siblingKeys: [String] = [],
+        allowFolding: Bool = true
+    ) {
         // Try key folding if enabled and allowed
         if allowFolding, let foldResult = tryFoldKeyPath(key: key, value: value, siblingKeys: siblingKeys) {
             let encodedKey = encodeKey(foldResult.path)
@@ -288,7 +303,13 @@ public final class TOONEncoder {
                     write(depth: depth, content: "\(encodedKey):", to: &output)
                 } else {
                     write(depth: depth, content: "\(encodedKey):", to: &output)
-                    encodeObject(values, keyOrder: keyOrder, output: &output, depth: depth + 1, allowFolding: allowNestedFolding)
+                    encodeObject(
+                        values,
+                        keyOrder: keyOrder,
+                        output: &output,
+                        depth: depth + 1,
+                        allowFolding: allowNestedFolding
+                    )
                 }
             }
             return
