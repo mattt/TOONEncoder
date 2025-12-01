@@ -1,7 +1,13 @@
 import Foundation
 
 /// An encoder that converts Swift values to TOON format
+///
+/// This encoder conforms to the TOON (Token-Oriented Object Notation) specification version 3.0.
+/// For more information, see: https://github.com/toon-format/spec
 public final class TOONEncoder {
+
+    /// The TOON specification version this encoder conforms to
+    public static let specVersion = "3.0"
 
     /// Number of spaces per indentation level
     public var indent: Int = 2
@@ -11,6 +17,42 @@ public final class TOONEncoder {
 
     /// Optional marker to prefix array lengths in headers
     public var lengthMarker: LengthMarker = .none
+
+    /// Key folding mode for collapsing single-key object chains into dotted paths
+    ///
+    /// When enabled, single-key nested objects like `{ a: { b: { c: 1 } } }`
+    /// are collapsed into `a.b.c: 1`. Only applies when all segments are valid identifiers.
+    ///
+    /// Example with `.safe`:
+    /// ```toon
+    /// user.profile.name: John
+    /// user.profile.age: 30
+    /// ```
+    public var keyFolding: KeyFolding = .disabled
+
+    /// Maximum number of segments to include in a folded path when `keyFolding` is `.safe`.
+    ///
+    /// Controls how many nested single-key objects are collapsed into a dotted path.
+    /// - Default is `Int.max` (unlimited folding depth)
+    /// - Values less than 2 have no practical folding effect
+    ///
+    /// Example with `flattenDepth = 2`:
+    /// - Input: `{ a: { b: { c: { d: 1 } } } }`
+    /// - Output: `a.b:` followed by nested `c:` and `d: 1`
+    ///
+    /// Example with `flattenDepth = Int.max` (default):
+    /// - Input: `{ a: { b: { c: 1 } } }`
+    /// - Output: `a.b.c: 1`
+    public var flattenDepth: Int = .max
+
+    /// Key folding mode
+    public enum KeyFolding: Hashable, Sendable {
+        /// No key folding
+        case disabled
+
+        /// Safe key folding: only fold when all segments are valid identifiers
+        case safe
+    }
 
     /// Delimiter character used to separate array values and tabular row cells
     ///
@@ -74,6 +116,8 @@ public final class TOONEncoder {
     /// - `indent`: 2 spaces
     /// - `delimiter`: `.comma`
     /// - `lengthMarker`: `.none`
+    /// - `keyFolding`: `.disabled`
+    /// - `flattenDepth`: `Int.max`
     public init() {}
 
     /// Encodes the given value to TOON format
@@ -135,15 +179,120 @@ public final class TOONEncoder {
         _ values: [String: Value],
         keyOrder: [String],
         output: inout [String],
-        depth: Int
+        depth: Int,
+        allowFolding: Bool = true
     ) {
         for key in keyOrder {
             guard let value = values[key] else { continue }
-            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth)
+            encodeKeyValuePair(
+                key: key,
+                value: value,
+                output: &output,
+                depth: depth,
+                siblingKeys: keyOrder,
+                allowFolding: allowFolding
+            )
         }
     }
 
-    private func encodeKeyValuePair(key: String, value: Value, output: inout [String], depth: Int) {
+    /// Attempts to fold a key path by following single-key object chains
+    /// Returns the folded path, final value, and whether we hit the depth limit, or nil if folding is not safe
+    /// - Parameters:
+    ///   - key: The starting key of the chain
+    ///   - value: The value associated with the key
+    ///   - siblingKeys: Other keys at the same object depth (for collision avoidance)
+    private func tryFoldKeyPath(
+        key: String,
+        value: Value,
+        siblingKeys: [String] = []
+    ) -> (path: String, value: Value, hitDepthLimit: Bool)? {
+        guard keyFolding == .safe else { return nil }
+
+        // Values less than 2 have no practical folding effect
+        guard flattenDepth >= 2 else { return nil }
+
+        var pathComponents: [String] = [key]
+        var currentValue = value
+        var hitDepthLimit = false
+
+        // Follow the chain of single-key objects, respecting flattenDepth limit
+        while case .object(let nestedValues, let nestedKeyOrder) = currentValue,
+            nestedKeyOrder.count == 1,
+            let singleKey = nestedKeyOrder.first,
+            let nextValue = nestedValues[singleKey]
+        {
+            // Stop if we've reached the flattenDepth limit
+            guard pathComponents.count < flattenDepth else {
+                hitDepthLimit = true
+                break
+            }
+
+            // Validate that the key is a safe identifier
+            guard singleKey.isValidIdentifierSegment else {
+                break
+            }
+
+            pathComponents.append(singleKey)
+            currentValue = nextValue
+        }
+
+        // Only fold if we found at least one nested level
+        guard pathComponents.count > 1 else { return nil }
+
+        // Validate all components are safe identifiers
+        guard pathComponents.allSatisfy({ $0.isValidIdentifierSegment }) else {
+            return nil
+        }
+
+        let foldedPath = pathComponents.joined(separator: ".")
+
+        // Collision avoidance: folded key must not equal any existing sibling key
+        if siblingKeys.contains(foldedPath) {
+            return nil
+        }
+
+        return (path: foldedPath, value: currentValue, hitDepthLimit: hitDepthLimit)
+    }
+
+    private func encodeKeyValuePair(
+        key: String,
+        value: Value,
+        output: inout [String],
+        depth: Int,
+        siblingKeys: [String] = [],
+        allowFolding: Bool = true
+    ) {
+        // Try key folding if enabled and allowed
+        if allowFolding,
+            case let (path, value, hitDepthLimit)? = tryFoldKeyPath(key: key, value: value, siblingKeys: siblingKeys)
+        {
+            let encodedKey = encodeKey(path)
+
+            switch value {
+            case .null, .bool, .int, .double, .string, .date, .url, .data:
+                if let encodedValue = encodePrimitive(value, delimiter: delimiter.rawValue, inObject: true) {
+                    write(depth: depth, content: "\(encodedKey): \(encodedValue)", to: &output)
+                }
+
+            case .array(let array):
+                encodeArray(key: path, array: array, output: &output, depth: depth)
+
+            case .object(let values, let keyOrder):
+                write(depth: depth, content: "\(encodedKey):", to: &output)
+                if !keyOrder.isEmpty {
+                    encodeObject(
+                        values,
+                        keyOrder: keyOrder,
+                        output: &output,
+                        depth: depth + 1,
+                        allowFolding: !hitDepthLimit
+                    )
+                }
+            }
+            return
+        }
+
+        // Regular encoding without folding
         let encodedKey = encodeKey(key)
 
         switch value {
@@ -284,7 +433,7 @@ public final class TOONEncoder {
         for i in 1 ..< keyOrder.count {
             let key = keyOrder[i]
             guard let value = values[key] else { continue }
-            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth + 1)
+            encodeKeyValuePair(key: key, value: value, output: &output, depth: depth + 1, siblingKeys: keyOrder)
         }
     }
 
@@ -1382,11 +1531,13 @@ private struct IndexedCodingKey: CodingKey {
 }
 
 // Shared number formatter that's used to avoid scientific notation
+// and format numbers in canonical decimal form (no trailing zeros)
 private let numberFormatter: NumberFormatter = {
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
     formatter.usesGroupingSeparator = false
     formatter.maximumFractionDigits = 15
+    formatter.minimumFractionDigits = 0  // Prevents trailing zeros
     formatter.locale = Locale(identifier: "en_US_POSIX")
     return formatter
 }()
@@ -1469,6 +1620,13 @@ private extension String {
     var isValidUnquotedKey: Bool {
         // Match pattern: starts with letter or underscore, followed by word characters or dots
         return range(of: #"^[A-Z_][\w.]*$"#, options: [.regularExpression, .caseInsensitive])
+            != nil
+    }
+
+    var isValidIdentifierSegment: Bool {
+        // Match pattern for a single identifier segment (no dots)
+        // Must start with letter or underscore, followed by word characters
+        return range(of: #"^[A-Z_]\w*$"#, options: [.regularExpression, .caseInsensitive])
             != nil
     }
 }
