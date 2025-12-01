@@ -1,7 +1,13 @@
-# TOONEncoder
+# TOONEncoder – TOON Format for Swift
 
-A Swift encoder for [TOON](https://github.com/toon-format/spec) (Token-Oriented Object Notation),
-a compact format designed to reduce LLM token usage by 30–60% compared with JSON.
+[![CI](https://github.com/toon-format/toon-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/toon-format/toon-swift/actions)
+[![Swift Version](https://img.shields.io/badge/swift-6.0+-orange.svg)](https://swift.org)
+[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
+[![License: MIT](https://img.shields.io/badge/license-MIT-fef3c0?labelColor=1b1b1f)](./LICENSE.md)
+
+Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
+
+**Key Features:** Minimal syntax • Tabular arrays for uniform data • Array length validation • Swift 6.0+ • Configurable delimiters • Key folding support.
 
 LLM tokens are expensive, and JSON is verbose.
 TOON saves tokens while remaining human-readable by
@@ -58,13 +64,13 @@ Add the following to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/mattt/TOONEncoder.git", from: "0.2.0")
+    .package(url: "https://github.com/toon-format/toon-swift.git", from: "0.2.0")
 ]
 ```
 
 ## Usage
 
-### Basic Encoding
+### Quick Start
 
 ```swift
 import TOONEncoder
@@ -309,7 +315,30 @@ Check the supported TOON specification version:
 print(TOONEncoder.specVersion) // "3.0"
 ```
 
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on how to get started, coding standards, and the process for submitting pull requests.
+
+Before contributing, please review:
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [TOON Specification](https://github.com/toon-format/spec/blob/main/SPEC.md)
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to hello@johannschopplich.com.
+
+## Project Status
+
+This library implements **TOON specification version 3.0** (2025-11-24) with full encoding support.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## Documentation
+
+- [📜 TOON Spec](https://github.com/toon-format/spec) - Official specification
+- [🐛 Issues](https://github.com/toon-format/toon-swift/issues) - Bug reports and features
+- [🤝 Contributing](CONTRIBUTING.md) - Contribution guidelines
+
 ## License
 
-This project is available under the MIT license.
-See the LICENSE file for more info.
+MIT License – see [LICENSE.md](LICENSE.md) for details
