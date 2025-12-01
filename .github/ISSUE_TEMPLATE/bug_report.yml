@@ -22,7 +22,7 @@ body:
       label: Reproduction Steps
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Import TOONEncoder
+        1. Import ToonFormat
         2. Call encode() with...
         3. See error...
     validations:
@@ -47,8 +47,8 @@ body:
   - type: dropdown
     id: version
     attributes:
-      label: TOONEncoder Version
-      description: Which version of TOONEncoder are you using?
+      label: swift-toon Version
+      description: Which version of swift-toon are you using?
       options:
         - 0.2.0 (latest)
         - 0.1.0

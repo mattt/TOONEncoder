@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Report an issue where TOONEncoder doesn't comply with the official TOON spec.
+        Report an issue where swift-toon doesn't comply with the official TOON spec.
 
   - type: input
     id: spec-version
@@ -38,8 +38,8 @@ body:
     id: current-behavior
     attributes:
       label: Current Behavior
-      description: What does TOONEncoder currently do?
-      placeholder: Currently, TOONEncoder...
+      description: What does swift-toon currently do?
+      placeholder: Currently, swift-toon...
     validations:
       required: true
 
@@ -50,7 +50,7 @@ body:
       description: Provide a test case that demonstrates the issue
       placeholder: |
         ```swift
-        import TOONEncoder
+        import ToonFormat
         let encoder = TOONEncoder()
         let result = try encoder.encode(...)
         // Expected: ...
