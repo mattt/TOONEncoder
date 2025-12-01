@@ -3,8 +3,6 @@
 A Swift encoder for [TOON](https://github.com/toon-format/spec) (Token-Oriented Object Notation),
 a compact format designed to reduce LLM token usage by 30–60% compared to JSON.
 
-This implementation conforms to **TOON specification version 3.0**.
-
 LLM tokens have a cost, and JSON is verbose.
 TOON saves tokens while remaining human-readable by
 using indentation for structure and tabular format for uniform data:
@@ -28,6 +26,24 @@ users[2]{id,name,role}:
 
 For full details on TOON's design, benchmarks, and specification,
 see the [TOON specification](https://github.com/toon-format/spec).
+
+## Features
+
+`TOONEncoder` conforms to **TOON specification version 3.0** (2025-11-24),
+implementing the following features:
+
+- [x] Canonical number formatting (no trailing zeros, no leading zeros except '0', -0 normalized to 0)
+- [x] Proper escape sequences for strings (`\\`, `\"`, `\n`, `\r`, `\t`)
+- [x] Three delimiter types: comma (default), tab, pipe
+- [x] Array length validation
+- [x] Object key order preservation
+- [x] Array order preservation
+- [x] Tabular format for uniform object arrays
+- [x] Inline format for primitive arrays
+- [x] Expanded list format for nested structures
+- [x] Key folding to collapse single-key object chains into dotted paths
+- [x] Configurable flatten depth to limit the depth of key folding
+- [x] Collision avoidance for folded keys to prevent folded keys from colliding with existing sibling keys
 
 ## Requirements
 
@@ -189,7 +205,7 @@ pairs[2]:
   - [2]: 3,4
 ```
 
-### Key Folding (TOON 3.0)
+### Key Folding
 
 Key folding collapses single-key nested objects into dotted paths, reducing indentation and token count:
 
@@ -212,7 +228,6 @@ let config = Config(
 )
 
 let encoder = TOONEncoder()
-encoder.keyFolding = .safe
 let data = try encoder.encode(config)
 ```
 
@@ -224,67 +239,72 @@ database:
     port: 5432
 ```
 
-With key folding (`.safe`):
+Output with key folding (`encoder.keyFolding = .safe`):
+
 ```
 database.connection:
   host: localhost
   port: 5432
 ```
 
-Key folding only applies when:
-- All path segments are valid identifiers (start with letter/underscore, contain only alphanumerics/underscores)
-- The folding chain consists of single-key objects
-- Using `.safe` mode ensures collision avoidance
-- The folded path doesn't collide with an existing sibling key
+When enabled, key folding applies only when
+all path segments are valid identifiers
+(start with a letter or underscore and contain only alphanumerics or underscores),
+each level in the chain is a single-key object,
+and the folded path does not collide with an existing sibling key
+(collision avoidance).
 
-### Flatten Depth (TOON 3.0)
+#### Flatten Depth
 
-Control how many levels of nesting are collapsed with `flattenDepth`:
+To control how aggressively key folding collapses nested objects,
+use `flattenDepth`:
 
 ```swift
+struct Metrics: Codable {
+    struct Service: Codable {
+        struct CPU: Codable {
+            let usage: Double
+        }
+        let cpu: CPU
+    }
+    let service: Service
+}
+
+let value = Metrics(
+    service: .init(
+        cpu: .init(usage: 0.73)
+    )
+)
+
 let encoder = TOONEncoder()
 encoder.keyFolding = .safe
-encoder.flattenDepth = 2  // Only fold 2 segments
+let data = try encoder.encode(value)
 ```
 
-With deep nesting and `flattenDepth = 2`:
-```
-level1.level2:
-  level3:
-    value: 42
-```
+Output with unlimited `flattenDepth` (default):
 
-With unlimited `flattenDepth` (default):
 ```
-level1.level2.level3.value: 42
+metrics.service.cpu.usage: 0.73
 ```
 
-Note: Values less than 2 have no practical folding effect.
+Output with deep nesting and `flattenDepth = 2`:
 
-## TOON 3.0 Compliance
+```swift
+encoder.flattenDepth = 2
+```
 
-This encoder implements the following TOON 3.0 features:
+```
+metrics.service:
+  cpu:
+    usage: 0.73
+```
 
-### Core Features
-- ✅ Canonical number formatting (no trailing zeros, no leading zeros except '0', -0 normalized to 0)
-- ✅ Proper escape sequences for strings (`\\`, `\"`, `\n`, `\r`, `\t`)
-- ✅ Three delimiter types: comma (default), tab, pipe
-- ✅ Array length validation
-- ✅ Object key order preservation
-- ✅ Array order preservation
-- ✅ Tabular format for uniform object arrays
-- ✅ Inline format for primitive arrays
-- ✅ Expanded list format for nested structures
-
-### Optional Features (TOON 3.0)
-- ✅ **Key Folding** (`.safe` mode): Collapses single-key object chains into dotted paths
-- ✅ **flattenDepth**: Limits the depth of key folding
-- ✅ **Collision Avoidance**: Prevents folded keys from colliding with existing sibling keys
-- ⚠️ **Path Expansion**: Not implemented (encoder-only, used during decoding)
+> [!TIP]
+> Specifying a flatten depth less than 2 has no practical effect.
 
 ### Version Information
 
-You can check the supported TOON specification version:
+Check the supported TOON specification version:
 
 ```swift
 print(TOONEncoder.specVersion) // "3.0"
