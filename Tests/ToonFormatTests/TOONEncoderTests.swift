@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import TOONEncoder
+@testable import ToonFormat
 
 @Suite("TOONEncoder Tests")
 struct TOONEncoderTests {
