@@ -45,28 +45,12 @@ public final class TOONEncoder {
     /// - Output: `a.b.c: 1`
     public var flattenDepth: Int = .max
 
-    /// Path expansion mode for expanding dotted paths back into nested objects
-    ///
-    /// This is the inverse of key folding. When enabled during decoding,
-    /// paths like `a.b.c: 1` are expanded into nested objects.
-    /// Note: This encoder always generates folded keys when keyFolding is enabled.
-    public var expandPaths: PathExpansion = .disabled
-
     /// Key folding mode
     public enum KeyFolding: Hashable, Sendable {
         /// No key folding
         case disabled
 
         /// Safe key folding: only fold when all segments are valid identifiers
-        case safe
-    }
-
-    /// Path expansion mode
-    public enum PathExpansion: Hashable, Sendable {
-        /// No path expansion
-        case disabled
-
-        /// Safe path expansion: expand dotted paths with collision detection
         case safe
     }
 
@@ -134,7 +118,6 @@ public final class TOONEncoder {
     /// - `lengthMarker`: `.none`
     /// - `keyFolding`: `.disabled`
     /// - `flattenDepth`: `Int.max`
-    /// - `expandPaths`: `.disabled`
     public init() {}
 
     /// Encodes the given value to TOON format
