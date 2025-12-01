@@ -1,11 +1,11 @@
 # TOONEncoder
 
 A Swift encoder for [TOON](https://github.com/toon-format/spec) (Token-Oriented Object Notation),
-a compact format designed to reduce LLM token usage by 30–60% compared to JSON.
+a compact format designed to reduce LLM token usage by 30–60% compared with JSON.
 
-LLM tokens have a cost, and JSON is verbose.
+LLM tokens are expensive, and JSON is verbose.
 TOON saves tokens while remaining human-readable by
-using indentation for structure and tabular format for uniform data:
+using indentation for structure and a tabular format for uniform data:
 
 **JSON**:
 ```json
@@ -29,11 +29,11 @@ see the [TOON specification](https://github.com/toon-format/spec).
 
 ## Features
 
-`TOONEncoder` conforms to **TOON specification version 3.0** (2025-11-24),
-implementing the following features:
+`TOONEncoder` conforms to **TOON specification version 3.0** (2025-11-24)
+and implements the following features:
 
-- [x] Canonical number formatting (no trailing zeros, no leading zeros except '0', -0 normalized to 0)
-- [x] Proper escape sequences for strings (`\\`, `\"`, `\n`, `\r`, `\t`)
+- [x] Canonical number formatting (no trailing zeros, no leading zeros except `0`; `-0` normalized to `0`)
+- [x] Correct escape sequences for strings (`\\`, `\"`, `\n`, `\r`, `\t`)
 - [x] Three delimiter types: comma (default), tab, pipe
 - [x] Array length validation
 - [x] Object key order preservation
@@ -43,7 +43,7 @@ implementing the following features:
 - [x] Expanded list format for nested structures
 - [x] Key folding to collapse single-key object chains into dotted paths
 - [x] Configurable flatten depth to limit the depth of key folding
-- [x] Collision avoidance for folded keys to prevent folded keys from colliding with existing sibling keys
+- [x] Collision avoidance so folded keys never collide with existing sibling keys
 
 ## Requirements
 
@@ -135,7 +135,7 @@ items[2|]{sku|name|qty|price}:
 
 ### Length Markers
 
-Add a `#` prefix to array lengths for emphasis:
+Add a `#` prefix to array lengths for emphasis and readability:
 
 ```swift
 let data = [
@@ -189,7 +189,7 @@ items[2]{sku,qty,price}:
 
 ### Arrays of Arrays
 
-When you have arrays containing primitive inner arrays:
+For arrays containing primitive inner arrays:
 
 ```swift
 let pairs = [[1, 2], [3, 4]]
@@ -284,7 +284,7 @@ let data = try encoder.encode(value)
 Output with unlimited `flattenDepth` (default):
 
 ```
-metrics.service.cpu.usage: 0.73
+service.cpu.usage: 0.73
 ```
 
 Output with deep nesting and `flattenDepth = 2`:
@@ -294,9 +294,8 @@ encoder.flattenDepth = 2
 ```
 
 ```
-metrics.service:
-  cpu:
-    usage: 0.73
+service.cpu:
+  usage: 0.73
 ```
 
 > [!TIP]
