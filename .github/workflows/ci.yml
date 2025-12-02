@@ -29,6 +29,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Lint
+        run: swift format lint --strict --recursive .
+
       - name: Build
         run: swift build -v
 
