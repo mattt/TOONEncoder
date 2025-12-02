@@ -27,7 +27,10 @@ jobs:
             runs-on: macos-26
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - name: Show Swift version
+        run: swift --version
 
       - name: Lint
         run: swift format lint --strict --recursive .
