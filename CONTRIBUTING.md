@@ -60,6 +60,7 @@ This project requires Swift 6.0 and above.
 ### Testing
 
 - All new features must include tests using Swift Testing framework
+- Maintain test coverage at **85%+ line coverage**
 - Tests should cover edge cases and spec compliance
 - Run the full test suite:
   ```bash
@@ -102,11 +103,13 @@ Before submitting changes that affect encoding/decoding behavior:
 
 ## Pull Request Guidelines
 
-- **Title**: Use a clear, descriptive title (e.g., "Add support for nested arrays", "Fix: Handle edge case in encoder")
+- **Title**: Use a clear, descriptive title
 - **Description**: Explain what changes you made and why
 - **Tests**: Include tests for your changes
-- **Documentation**: Update README or code comments if needed
+- **Documentation**: Update README or documentation if needed
 - **Commits**: Use clear commit messages ([Conventional Commits](https://www.conventionalcommits.org/) preferred)
+
+Your pull request will use our standard template which guides you through the required information.
 
 ## Communication
 
@@ -116,11 +119,11 @@ Before submitting changes that affect encoding/decoding behavior:
 
 ## Maintainers
 
-This project is maintained by:
+This is a collaborative project. Current maintainers:
 
 - [@mattt](https://github.com/mattt)
 
-For major architectural decisions, please open a discussion issue first.
+All maintainers have equal and consensual decision-making power. For major architectural decisions, please open a discussion issue first.
 
 ## License
 
