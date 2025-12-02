@@ -123,10 +123,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        id: 123
-        name: Ada
-        active: true
-        """
+            id: 123
+            name: Ada
+            active: true
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(TestObject.self, from: data)
 
@@ -142,9 +142,9 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        id: 123
-        value: null
-        """
+            id: 123
+            value: null
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(NullTestObject.self, from: data)
 
@@ -186,9 +186,9 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        "order:id": 7
-        "[index]": 5
-        """
+            "order:id": 7
+            "[index]": 5
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(SpecialKeyObject.self, from: data)
 
@@ -227,10 +227,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        a:
-          b:
-            c: deep
-        """
+            a:
+              b:
+                c: deep
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(DeepNestedObject.self, from: data)
 
@@ -246,9 +246,9 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        tags[2]: reading,gaming
-        nums[3]: 1,2,3
-        """
+            tags[2]: reading,gaming
+            nums[3]: 1,2,3
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(PrimitiveArrayObject.self, from: data)
 
@@ -292,10 +292,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        items[2]{sku,qty,price}:
-          A1,2,9.99
-          B2,1,14.5
-        """
+            items[2]{sku,qty,price}:
+              A1,2,9.99
+              B2,1,14.5
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(TabularArrayObject.self, from: data)
 
@@ -319,10 +319,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        items[2]{id,value}:
-          1,null
-          2,test
-        """
+            items[2]{id,value}:
+              1,null
+              2,test
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(NullTabularArrayObject.self, from: data)
 
@@ -341,12 +341,12 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        [2]:
-          - id: 1
-            name: First
-          - id: 2
-            name: Second
-        """
+            [2]:
+              - id: 1
+                name: First
+              - id: 2
+                name: Second
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode([ListItemObject].self, from: data)
 
@@ -368,10 +368,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        items[1]:
-          - nums[3]: 1,2,3
-            name: test
-        """
+            items[1]:
+              - nums[3]: 1,2,3
+                name: test
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(ContainerObject.self, from: data)
 
@@ -388,10 +388,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        pairs[2]:
-          - [2]: a,b
-          - [2]: c,d
-        """
+            pairs[2]:
+              - [2]: a,b
+              - [2]: c,d
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(ArrayOfArraysObject.self, from: data)
 
@@ -415,10 +415,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        [2]{id}:
-          1
-          2
-        """
+            [2]{id}:
+              1
+              2
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode([SimpleObject].self, from: data)
 
@@ -450,13 +450,13 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        user:
-          id: 123
-          name: Ada
-          tags[2]: reading,gaming
-          active: true
-          prefs[0]:
-        """
+            user:
+              id: 123
+              name: Ada
+              tags[2]: reading,gaming
+              active: true
+              prefs[0]:
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(ComplexObject.self, from: data)
 
@@ -503,10 +503,10 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        items[2|]{sku|qty|price}:
-          A1|2|9.99
-          B2|1|14.5
-        """
+            items[2|]{sku|qty|price}:
+              A1|2|9.99
+              B2|1|14.5
+            """
         let data = toon.data(using: .utf8)!
         let result = try decoder.decode(TabularDelimiterArrayObject.self, from: data)
 
@@ -903,7 +903,7 @@ struct TOONDecoderTests {
         }
 
         let original = MixedArrayObject(items: [
-            MixedObject(id: 1, nested: ["x": "1"]),
+            MixedObject(id: 1, nested: ["x": "1"])
         ])
         let encoded = try encoder.encode(original)
         let decoded = try decoder.decode(MixedArrayObject.self, from: encoded)
@@ -926,7 +926,7 @@ struct TOONDecoderTests {
             let items: [String]
         }
 
-        let toon = "items[3]: a,b" // Declares 3, but only 2 values
+        let toon = "items[3]: a,b"  // Declares 3, but only 2 values
         let data = toon.data(using: .utf8)!
 
         #expect(throws: TOONDecodingError.self) {
@@ -945,9 +945,9 @@ struct TOONDecoderTests {
         }
 
         let toon = """
-        items[1]{a,b}:
-          only_one_value
-        """
+            items[1]{a,b}:
+              only_one_value
+            """
         let data = toon.data(using: .utf8)!
 
         #expect(throws: TOONDecodingError.self) {
@@ -988,7 +988,7 @@ struct TOONDecoderTests {
             let value: Int8
         }
 
-        let toon = "value: 200" // Exceeds Int8.max (127)
+        let toon = "value: 200"  // Exceeds Int8.max (127)
         let data = toon.data(using: .utf8)!
 
         #expect(throws: TOONDecodingError.self) {
@@ -1001,7 +1001,7 @@ struct TOONDecoderTests {
             let value: UInt8
         }
 
-        let toon = "value: -1" // Negative value for unsigned
+        let toon = "value: -1"  // Negative value for unsigned
         let data = toon.data(using: .utf8)!
 
         #expect(throws: TOONDecodingError.self) {
@@ -1014,7 +1014,7 @@ struct TOONDecoderTests {
             let value: UInt8
         }
 
-        let toon = "value: 300" // Exceeds UInt8.max (255)
+        let toon = "value: 300"  // Exceeds UInt8.max (255)
         let data = toon.data(using: .utf8)!
 
         #expect(throws: TOONDecodingError.self) {
@@ -1054,7 +1054,7 @@ struct TOONDecoderTests {
             let items: [String]
         }
 
-        let toon = "items[5]: a,b,c,d,e" // 5 items exceeds limit of 2
+        let toon = "items[5]: a,b,c,d,e"  // 5 items exceeds limit of 2
         let data = toon.data(using: .utf8)!
 
         #expect(throws: TOONDecodingError.self) {

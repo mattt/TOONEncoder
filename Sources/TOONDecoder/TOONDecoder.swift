@@ -616,7 +616,7 @@ private final class Parser {
 
     private func findClosingQuote(in str: Substring) -> String.Index? {
         var escaped = false
-        var index = str.index(after: str.startIndex) // Skip opening quote
+        var index = str.index(after: str.startIndex)  // Skip opening quote
 
         while index < str.endIndex {
             let char = str[index]
@@ -735,7 +735,12 @@ private final class Parser {
 
         if let fields = header.fields {
             // Tabular format
-            items = try parseTabularRows(count: header.count, fields: fields, delimiter: header.delimiter, atDepth: depth)
+            items = try parseTabularRows(
+                count: header.count,
+                fields: fields,
+                delimiter: header.delimiter,
+                atDepth: depth
+            )
         } else {
             // List format or array of arrays
             items = try parseListItems(count: header.count, delimiter: header.delimiter, atDepth: depth)
@@ -748,7 +753,8 @@ private final class Parser {
         return .array(items)
     }
 
-    private func parseTabularRows(count: Int, fields: [String], delimiter: String, atDepth depth: Int) throws -> [Value] {
+    private func parseTabularRows(count: Int, fields: [String], delimiter: String, atDepth depth: Int) throws -> [Value]
+    {
         var rows: [Value] = []
         let expectedDepth = depth + 1
 
@@ -1118,8 +1124,7 @@ private extension TOONDecoder {
         }
 
         func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key>
-            where Key: CodingKey
-        {
+        where Key: CodingKey {
             guard let (values, keyOrder) = value.objectValue else {
                 throw TOONDecodingError.typeMismatch(expected: "object", actual: value.typeName)
             }
@@ -1463,8 +1468,7 @@ private extension TOONDecoder {
         }
 
         func nestedContainer<NestedKey>(keyedBy _: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey>
-            where NestedKey: CodingKey
-        {
+        where NestedKey: CodingKey {
             let value = try getCurrentValue()
             guard let (values, keyOrder) = value.objectValue else {
                 throw TOONDecodingError.typeMismatch(expected: "object", actual: value.typeName)
