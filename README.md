@@ -7,7 +7,7 @@
 
 Compact, human-readable serialization format for LLM contexts with **30-60% token reduction** vs JSON. Combines YAML-like indentation with CSV-like tabular arrays. Full compatibility with the [official TOON specification](https://github.com/toon-format/spec).
 
-**Key Features:** Minimal syntax • Tabular arrays for uniform data • Array length validation • Swift 6.0+ • Configurable delimiters • Key folding support.
+**Key Features:** Minimal syntax • Tabular arrays for uniform data • Array length validation • Swift 6.0+ • Configurable delimiters • Key folding / Path expansion support • Linux compatible.
 
 LLM tokens are expensive, and JSON is verbose.
 TOON saves tokens while remaining human-readable by
@@ -37,6 +37,8 @@ see the [TOON specification](https://github.com/toon-format/spec).
 
 ## Features
 
+### TOONEncoder
+
 `TOONEncoder` conforms to **TOON specification version 3.0** (2025-11-24)
 and implements the following features:
 
@@ -53,10 +55,25 @@ and implements the following features:
 - [x] Configurable flatten depth to limit the depth of key folding
 - [x] Collision avoidance so folded keys never collide with existing sibling keys
 
+### TOONDecoder
+
+`TOONDecoder` conforms to **TOON specification version 3.0** (2025-11-24)
+and implements the following features:
+
+- [x] Correct escape sequence parsing (`\\`, `\"`, `\n`, `\r`, `\t`)
+- [x] Three delimiter types: comma (default), tab, pipe
+- [x] Array length validation
+- [x] Tabular format parsing with field headers
+- [x] Inline format for primitive arrays
+- [x] Expanded list format for nested structures
+- [x] Path expansion to unfold dotted keys into nested objects (inverse of key folding)
+- [x] Detailed error reporting with line numbers
+- [x] Configurable decoding limits for security
+
 ## Requirements
 
 - Swift 6.0+ / Xcode 16+
-- iOS 13.0+ / macOS 10.15+ / watchOS 6.0+ / tvOS 13.0+ / visionOS 1.0+
+- iOS 13.0+ / macOS 10.15+ / watchOS 6.0+ / tvOS 13.0+ / visionOS 1.0+ / Linux
 
 ## Installation
 
@@ -66,13 +83,26 @@ Add the following to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/toon-format/toon-swift.git", from: "0.2.0")
+    .package(url: "https://github.com/toon-format/toon-swift.git", from: "0.3.0")
 ]
+```
+
+Then add the dependency to your target:
+
+```swift
+// For both encoder and decoder:
+.target(name: "YourTarget", dependencies: ["ToonFormat"])
+
+// Or individually:
+.target(name: "YourTarget", dependencies: ["TOONEncoder"])
+.target(name: "YourTarget", dependencies: ["TOONDecoder"])
 ```
 
 ## Usage
 
-### Quick Start
+### Encoding
+
+#### Quick Start
 
 ```swift
 import ToonFormat
@@ -105,7 +135,7 @@ tags[2]: reading,gaming
 active: true
 ```
 
-### Custom Delimiters
+#### Custom Delimiters
 
 Use tab or pipe delimiters for additional token savings:
 
@@ -144,7 +174,7 @@ items[2|]{sku|name|qty|price}:
   B2|Gadget|1|14.5
 ```
 
-### Length Markers
+#### Length Markers
 
 Add a `#` prefix to array lengths for emphasis and readability:
 
@@ -172,7 +202,7 @@ items[#2]{sku,qty,price}:
   B2,1,14.5
 ```
 
-### Tabular Arrays
+#### Tabular Arrays
 
 Arrays of objects with identical primitive fields use an efficient tabular format:
 
@@ -200,7 +230,7 @@ items[2]{sku,qty,price}:
   B2,1,14.5
 ```
 
-### Arrays of Arrays
+#### Arrays of Arrays
 
 For arrays containing primitive inner arrays:
 
@@ -219,7 +249,7 @@ pairs[2]:
   - [2]: 3,4
 ```
 
-### Key Folding
+#### Key Folding
 
 Key folding collapses single-key nested objects into dotted paths, reducing indentation and token count:
 
@@ -242,6 +272,7 @@ let config = Config(
 )
 
 let encoder = TOONEncoder()
+encoder.keyFolding = .safe
 let data = try encoder.encode(config)
 ```
 
@@ -262,59 +293,96 @@ database.connection:
   port: 5432
 ```
 
-When enabled, key folding applies only when
-all path segments are valid identifiers
-(start with a letter or underscore and contain only alphanumerics or underscores),
-each level in the chain is a single-key object,
-and the folded path does not collide with an existing sibling key
-(collision avoidance).
+### Decoding
 
-#### Flatten Depth
-
-To control how aggressively key folding collapses nested objects,
-use `flattenDepth`:
+#### Basic Decoding
 
 ```swift
-struct Metrics: Codable {
-    struct Service: Codable {
-        struct CPU: Codable {
-            let usage: Double
-        }
-        let cpu: CPU
-    }
-    let service: Service
+import TOONDecoder
+
+struct User: Codable {
+    let id: Int
+    let name: String
+    let tags: [String]
+    let active: Bool
 }
 
-let value = Metrics(
-    service: .init(
-        cpu: .init(usage: 0.73)
-    )
-)
+let toon = """
+id: 123
+name: Ada
+tags[2]: reading,gaming
+active: true
+"""
 
-let encoder = TOONEncoder()
-encoder.keyFolding = .safe
-let data = try encoder.encode(value)
+let decoder = TOONDecoder()
+let user = try decoder.decode(User.self, from: Data(toon.utf8))
+print(user.name) // "Ada"
 ```
 
-Output with unlimited `flattenDepth` (default):
-
-```
-service.cpu.usage: 0.73
-```
-
-Output with deep nesting and `flattenDepth = 2`:
+#### Tabular Format
 
 ```swift
-encoder.flattenDepth = 2
+struct Item: Codable {
+    let sku: String
+    let qty: Int
+    let price: Double
+}
+
+struct Order: Codable {
+    let items: [Item]
+}
+
+let toon = """
+items[2]{sku,qty,price}:
+  A1,2,9.99
+  B2,1,14.5
+"""
+
+let decoder = TOONDecoder()
+let order = try decoder.decode(Order.self, from: Data(toon.utf8))
+print(order.items.count) // 2
 ```
 
-```
-service.cpu:
-  usage: 0.73
+#### Path Expansion
+
+Path expansion unfolds dotted keys into nested objects — the inverse of TOONEncoder's key folding:
+
+```swift
+struct Config: Codable {
+    struct Database: Codable {
+        struct Connection: Codable {
+            let host: String
+            let port: Int
+        }
+        let connection: Connection
+    }
+    let database: Database
+}
+
+let toon = """
+database.connection.host: localhost
+database.connection.port: 5432
+"""
+
+let decoder = TOONDecoder()
+decoder.expandPaths = .safe
+let config = try decoder.decode(Config.self, from: Data(toon.utf8))
+print(config.database.connection.host) // "localhost"
 ```
 
-> [!TIP]
-> Specifying a flatten depth less than 2 has no practical effect.
+#### Decoding Limits
+
+Protect against malicious or malformed input:
+
+```swift
+let decoder = TOONDecoder()
+decoder.limits = TOONDecoder.DecodingLimits(
+    maxInputSize: 1024 * 1024,  // 1 MB
+    maxDepth: 64,
+    maxObjectKeys: 1000,
+    maxArrayLength: 10000
+)
+```
 
 ### Version Information
 
@@ -322,6 +390,7 @@ Check the supported TOON specification version:
 
 ```swift
 print(TOONEncoder.specVersion) // "3.0"
+print(TOONDecoder.specVersion) // "3.0"
 ```
 
 ## Contributing
@@ -339,15 +408,15 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 ## Project Status
 
-This library implements **TOON specification version 3.0** (2025-11-24) with full encoding support.
+This library implements **TOON specification version 3.0** (2025-11-24) with full encoding and decoding support.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## Documentation
 
-- [📜 TOON Spec](https://github.com/toon-format/spec) - Official specification
-- [🐛 Issues](https://github.com/toon-format/toon-swift/issues) - Bug reports and features
-- [🤝 Contributing](CONTRIBUTING.md) - Contribution guidelines
+- [TOON Spec](https://github.com/toon-format/spec) - Official specification
+- [Issues](https://github.com/toon-format/toon-swift/issues) - Bug reports and features
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
 ## License
 
