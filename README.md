@@ -1,4 +1,4 @@
-# TOONEncoder – TOON Format for Swift
+# TOON Format for Swift
 
 [![CI](https://github.com/toon-format/toon-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/toon-format/toon-swift/actions)
 [![Swift Version](https://img.shields.io/badge/swift-6.0+-orange.svg)](https://swift.org)
@@ -14,6 +14,7 @@ TOON saves tokens while remaining human-readable by
 using indentation for structure and a tabular format for uniform data:
 
 **JSON**:
+
 ```json
 {
   "users": [
@@ -24,6 +25,7 @@ using indentation for structure and a tabular format for uniform data:
 ```
 
 **TOON**:
+
 ```
 users[2]{id,name,role}:
   1,Alice,admin
@@ -53,8 +55,8 @@ and implements the following features:
 
 ## Requirements
 
-* Swift 6.0+ / Xcode 16+
-* iOS 13.0+ / macOS 10.15+ / watchOS 6.0+ / tvOS 13.0+ / visionOS 1.0+
+- Swift 6.0+ / Xcode 16+
+- iOS 13.0+ / macOS 10.15+ / watchOS 6.0+ / tvOS 13.0+ / visionOS 1.0+
 
 ## Installation
 
@@ -73,7 +75,7 @@ dependencies: [
 ### Quick Start
 
 ```swift
-import TOONEncoder
+import ToonFormat
 
 struct User: Codable {
     let id: Int
@@ -95,6 +97,7 @@ print(String(data: data, encoding: .utf8)!)
 ```
 
 Output:
+
 ```
 id: 123
 name: Ada
@@ -126,6 +129,7 @@ let data = try encoder.encode(["items": items])
 ```
 
 Output with tab delimiter:
+
 ```
 items[2	]{sku	name	qty	price}:
   A1	Widget	2	9.99
@@ -133,6 +137,7 @@ items[2	]{sku	name	qty	price}:
 ```
 
 Output with pipe delimiter:
+
 ```
 items[2|]{sku|name|qty|price}:
   A1|Widget|2|9.99
@@ -159,6 +164,7 @@ let output = try encoder.encode(data)
 ```
 
 Output:
+
 ```
 tags[#3]: reading,gaming,coding
 items[#2]{sku,qty,price}:
@@ -187,6 +193,7 @@ let data = try encoder.encode(["items": items])
 ```
 
 Output:
+
 ```
 items[2]{sku,qty,price}:
   A1,2,9.99
@@ -205,6 +212,7 @@ let data = try encoder.encode(["pairs": pairs])
 ```
 
 Output:
+
 ```
 pairs[2]:
   - [2]: 1,2
@@ -238,6 +246,7 @@ let data = try encoder.encode(config)
 ```
 
 Without key folding:
+
 ```
 database:
   connection:
@@ -320,6 +329,7 @@ print(TOONEncoder.specVersion) // "3.0"
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on how to get started, coding standards, and the process for submitting pull requests.
 
 Before contributing, please review:
+
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [TOON Specification](https://github.com/toon-format/spec/blob/main/SPEC.md)
 

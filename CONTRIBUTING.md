@@ -1,4 +1,4 @@
-# Contributing to TOONEncoder
+# Contributing to toon-swift
 
 Thank you for your interest in contributing to the official Swift implementation of TOON!
 
@@ -9,7 +9,7 @@ This project uses Swift Package Manager for dependency management and build auto
 ```bash
 # Clone the repository
 git clone https://github.com/toon-format/toon-swift.git
-cd TOONEncoder
+cd toon-swift
 
 # Build the project
 swift build
@@ -63,6 +63,7 @@ This project requires Swift 6.0 and above.
 - Maintain test coverage at **85%+ line coverage**
 - Tests should cover edge cases and spec compliance
 - Run the full test suite:
+
   ```bash
   swift test
 
