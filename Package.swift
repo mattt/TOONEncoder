@@ -16,15 +16,7 @@ let package = Package(
         .library(
             name: "ToonFormat",
             targets: ["ToonFormat"]
-        ),
-        .library(
-            name: "TOONEncoder",
-            targets: ["TOONEncoder"]
-        ),
-        .library(
-            name: "TOONDecoder",
-            targets: ["TOONDecoder"]
-        ),
+        )
     ],
     targets: [
         .target(

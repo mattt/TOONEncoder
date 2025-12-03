@@ -6,9 +6,6 @@ import Foundation
 /// For more information, see: https://github.com/toon-format/spec
 public final class TOONEncoder {
 
-    /// The TOON specification version this encoder conforms to
-    public static let specVersion = "3.0"
-
     /// Number of spaces per indentation level
     public var indent: Int = 2
 

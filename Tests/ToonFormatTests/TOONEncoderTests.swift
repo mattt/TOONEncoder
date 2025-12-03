@@ -1499,7 +1499,7 @@ struct TOONEncoderTests {
     }
 
     @Test func versionDeclaration() async throws {
-        #expect(TOONEncoder.specVersion == "3.0")
+        #expect(toonSpecVersion == "3.0")
     }
 
     @Test func canonicalNumberFormat() async throws {

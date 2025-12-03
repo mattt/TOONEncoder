@@ -1,8 +1,7 @@
 import Foundation
 import Testing
 
-@testable import TOONDecoder
-import TOONEncoder
+@testable import ToonFormat
 
 @Suite("TOONDecoder Tests")
 struct TOONDecoderTests {
@@ -609,10 +608,95 @@ struct TOONDecoderTests {
         #expect(result.user.profile.name == "Ada")
     }
 
+    @Test func pathExpansionAutomatic() async throws {
+        struct NestedObject: Codable, Equatable {
+            struct User: Codable, Equatable {
+                struct Profile: Codable, Equatable {
+                    let name: String
+                }
+
+                let profile: Profile
+            }
+
+            let user: User
+        }
+
+        let decoder = TOONDecoder()
+        // .automatic is the default
+        #expect(decoder.expandPaths == .automatic)
+
+        let toon = "user.profile.name: Ada"
+        let data = toon.data(using: .utf8)!
+        let result = try decoder.decode(NestedObject.self, from: data)
+        #expect(result.user.profile.name == "Ada")
+    }
+
+    @Test func pathExpansionAutomaticFallbackOnCollision() async throws {
+        struct CollisionObject: Codable, Equatable {
+            let user: String
+            let userName: String
+
+            enum CodingKeys: String, CodingKey {
+                case user
+                case userName = "user.name"
+            }
+        }
+
+        let decoder = TOONDecoder()
+        // .automatic should fall back to literal key on path collision
+
+        let toon = """
+            user: Ada
+            user.name: Lovelace
+            """
+        let data = toon.data(using: .utf8)!
+        let result = try decoder.decode(CollisionObject.self, from: data)
+        #expect(result.user == "Ada")
+        #expect(result.userName == "Lovelace")
+    }
+
+    // MARK: - Auto-detected Indentation
+
+    @Test func autoDetectIndentation4Spaces() async throws {
+        struct NestedObject: Codable, Equatable {
+            struct Inner: Codable, Equatable {
+                let value: String
+            }
+
+            let outer: Inner
+        }
+
+        let toon = """
+            outer:
+                value: test
+            """
+        let data = toon.data(using: .utf8)!
+        let result = try decoder.decode(NestedObject.self, from: data)
+        #expect(result.outer.value == "test")
+    }
+
+    @Test func autoDetectIndentation3Spaces() async throws {
+        struct NestedObject: Codable, Equatable {
+            struct Inner: Codable, Equatable {
+                let value: String
+            }
+
+            let outer: Inner
+        }
+
+        let toon = """
+            outer:
+               value: test
+            """
+        let data = toon.data(using: .utf8)!
+        let result = try decoder.decode(NestedObject.self, from: data)
+        #expect(result.outer.value == "test")
+    }
+
     // MARK: - Specification Compliance
 
     @Test func versionDeclaration() async throws {
-        #expect(TOONDecoder.specVersion == "3.0")
+        #expect(toonSpecVersion == "3.0")
     }
 
     // MARK: - Round-Trip Tests

@@ -90,19 +90,12 @@ dependencies: [
 Then add the dependency to your target:
 
 ```swift
-// For both encoder and decoder:
 .target(name: "YourTarget", dependencies: ["ToonFormat"])
-
-// Or individually:
-.target(name: "YourTarget", dependencies: ["TOONEncoder"])
-.target(name: "YourTarget", dependencies: ["TOONDecoder"])
 ```
 
 ## Usage
 
-### Encoding
-
-#### Quick Start
+### Quick Start
 
 ```swift
 import ToonFormat
@@ -114,6 +107,7 @@ struct User: Codable {
     let active: Bool
 }
 
+// Encoding
 let user = User(
     id: 123,
     name: "Ada",
@@ -124,15 +118,15 @@ let user = User(
 let encoder = TOONEncoder()
 let data = try encoder.encode(user)
 print(String(data: data, encoding: .utf8)!)
-```
+// id: 123
+// name: Ada
+// tags[2]: reading,gaming
+// active: true
 
-Output:
-
-```
-id: 123
-name: Ada
-tags[2]: reading,gaming
-active: true
+// Decoding
+let decoder = TOONDecoder()
+let decoded = try decoder.decode(User.self, from: data)
+print(decoded.name) // "Ada"
 ```
 
 #### Custom Delimiters
@@ -293,84 +287,7 @@ database.connection:
   port: 5432
 ```
 
-### Decoding
-
-#### Basic Decoding
-
-```swift
-import TOONDecoder
-
-struct User: Codable {
-    let id: Int
-    let name: String
-    let tags: [String]
-    let active: Bool
-}
-
-let toon = """
-id: 123
-name: Ada
-tags[2]: reading,gaming
-active: true
-"""
-
-let decoder = TOONDecoder()
-let user = try decoder.decode(User.self, from: Data(toon.utf8))
-print(user.name) // "Ada"
-```
-
-#### Tabular Format
-
-```swift
-struct Item: Codable {
-    let sku: String
-    let qty: Int
-    let price: Double
-}
-
-struct Order: Codable {
-    let items: [Item]
-}
-
-let toon = """
-items[2]{sku,qty,price}:
-  A1,2,9.99
-  B2,1,14.5
-"""
-
-let decoder = TOONDecoder()
-let order = try decoder.decode(Order.self, from: Data(toon.utf8))
-print(order.items.count) // 2
-```
-
-#### Path Expansion
-
-Path expansion unfolds dotted keys into nested objects — the inverse of TOONEncoder's key folding:
-
-```swift
-struct Config: Codable {
-    struct Database: Codable {
-        struct Connection: Codable {
-            let host: String
-            let port: Int
-        }
-        let connection: Connection
-    }
-    let database: Database
-}
-
-let toon = """
-database.connection.host: localhost
-database.connection.port: 5432
-"""
-
-let decoder = TOONDecoder()
-decoder.expandPaths = .safe
-let config = try decoder.decode(Config.self, from: Data(toon.utf8))
-print(config.database.connection.host) // "localhost"
-```
-
-#### Decoding Limits
+### Decoding Limits
 
 Protect against malicious or malformed input:
 
@@ -389,8 +306,7 @@ decoder.limits = TOONDecoder.DecodingLimits(
 Check the supported TOON specification version:
 
 ```swift
-print(TOONEncoder.specVersion) // "3.0"
-print(TOONDecoder.specVersion) // "3.0"
+print(toonSpecVersion) // "3.0"
 ```
 
 ## Contributing
@@ -414,9 +330,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## Documentation
 
-- [TOON Spec](https://github.com/toon-format/spec) - Official specification
-- [Issues](https://github.com/toon-format/toon-swift/issues) - Bug reports and features
-- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+- [📜 TOON Spec](https://github.com/toon-format/spec) - Official specification
+- [🐛 Issues](https://github.com/toon-format/toon-swift/issues) - Bug reports and features
+- [🤝 Contributing](CONTRIBUTING.md) - Contribution guidelines
 
 ## License
 

@@ -5,18 +5,12 @@ import Foundation
 /// This decoder conforms to the TOON (Token-Oriented Object Notation) specification version 3.0.
 /// For more information, see: https://github.com/toon-format/spec
 public final class TOONDecoder {
-    /// The TOON specification version this decoder conforms to
-    public static let specVersion = "3.0"
-
-    /// Number of spaces per indentation level
-    public var indent: Int = 2
-
     /// Path expansion mode for dotted keys
     ///
     /// When enabled, dotted keys like `a.b.c: value` are expanded to nested objects.
     /// This is the inverse operation of TOONEncoder's keyFolding option.
     ///
-    /// Example with `.safe`:
+    /// Example with `.safe` or `.automatic`:
     /// ```toon
     /// user.profile.name: John
     /// ```
@@ -26,7 +20,7 @@ public final class TOONDecoder {
     ///   profile:
     ///     name: John
     /// ```
-    public var expandPaths: PathExpansion = .disabled
+    public var expandPaths: PathExpansion = .automatic
 
     /// Limits for decoding to prevent resource exhaustion
     ///
@@ -35,36 +29,59 @@ public final class TOONDecoder {
 
     /// Path expansion mode
     public enum PathExpansion: Hashable, Sendable {
+        /// Automatic path expansion - expands dotted keys when they match the target type structure
+        /// Falls back gracefully if expansion causes conflicts
+        case automatic
+
         /// No path expansion - dotted keys decoded as literal strings
         case disabled
 
         /// Safe path expansion: expand dotted keys to nested objects with collision detection
+        /// Throws an error on collision
         case safe
     }
 
     /// Limits for decoding to prevent resource exhaustion
     public struct DecodingLimits: Hashable, Sendable {
-        /// Maximum input size in bytes (default: 10 MB)
+        /// Maximum input size in bytes
         public var maxInputSize: Int
 
-        /// Maximum nesting depth (default: 128)
+        /// Maximum nesting depth
         public var maxDepth: Int
 
-        /// Maximum number of keys in a single object (default: 10,000)
+        /// Maximum number of keys in a single object
         public var maxObjectKeys: Int
 
-        /// Maximum array length (default: 100,000)
+        /// Maximum array length
         public var maxArrayLength: Int
 
         /// Default limits suitable for most use cases
+        ///
+        /// - `maxInputSize`: 10 MB
+        /// - `maxDepth`: 32 (prevents stack overflow from deep nesting)
+        /// - `maxObjectKeys`: 10,000
+        /// - `maxArrayLength`: 100,000
         public static let `default` = DecodingLimits(
             maxInputSize: 10 * 1024 * 1024,
-            maxDepth: 128,
-            maxObjectKeys: 10000,
+            maxDepth: 32,
+            maxObjectKeys: 10_000,
             maxArrayLength: 100_000
         )
 
-        /// No limits - use with caution on trusted input only
+        /// Decoding limits that impose no restrictions.
+        ///
+        /// - Warning: This configuration is unsafe for untrusted input and
+        ///   should only be used with data from trusted sources.
+        ///   Without limits, malicious input can cause excessive memory usage,
+        ///   stack overflow from deep nesting, or denial of service attacks.
+        ///
+        /// Use this only when you have full control over the input data and
+        /// need to decode arbitrarily large or complex TOON structures.
+        ///
+        /// For production use with external input, use
+        /// ``default`` or
+        /// ``init(maxInputSize:maxDepth:maxObjectKeys:maxArrayLength:)``
+        /// with appropriate limits instead.
         public static let unlimited = DecodingLimits(
             maxInputSize: .max,
             maxDepth: .max,
@@ -83,8 +100,8 @@ public final class TOONDecoder {
     /// Creates a new TOON decoder with default configuration
     ///
     /// Default settings:
-    /// - `indent`: 2 spaces
-    /// - `expandPaths`: `.disabled`
+    /// - `expandPaths`: `.automatic`
+    /// - `limits`: `.default`
     public init() {}
 
     /// Decodes TOON format data to the specified type
@@ -103,7 +120,7 @@ public final class TOONDecoder {
             throw TOONDecodingError.invalidFormat("Data is not valid UTF-8")
         }
 
-        let parser = Parser(text: text, indentSize: indent, expandPaths: expandPaths, limits: limits)
+        let parser = Parser(text: text, expandPaths: expandPaths, limits: limits)
         let value = try parser.parse()
 
         let decoder = _Decoder(value: value, codingPath: [], userInfo: [:])
@@ -227,17 +244,17 @@ private enum Value: Equatable {
 
 private final class Parser {
     private let lines: [String]
-    private let indentSize: Int
+    private var indentSize: Int = 2
     private let expandPaths: TOONDecoder.PathExpansion
     private let limits: TOONDecoder.DecodingLimits
     private var currentLine: Int = 0
+    private var indentDetected: Bool = false
 
-    init(text: String, indentSize: Int, expandPaths: TOONDecoder.PathExpansion, limits: TOONDecoder.DecodingLimits) {
+    init(text: String, expandPaths: TOONDecoder.PathExpansion, limits: TOONDecoder.DecodingLimits) {
         // Split by LF, handling potential CR+LF
         lines = text.replacingOccurrences(of: "\r\n", with: "\n")
             .split(separator: "\n", omittingEmptySubsequences: false)
             .map(String.init)
-        self.indentSize = indentSize
         self.expandPaths = expandPaths
         self.limits = limits
     }
@@ -322,8 +339,14 @@ private final class Parser {
             index = line.index(after: index)
         }
 
-        // Validate indentation is multiple of indent size
-        let depth = spaces / indentSize
+        // Auto-detect indent size from first indented line
+        if spaces > 0 && !indentDetected {
+            indentSize = spaces
+            indentDetected = true
+        }
+
+        // Calculate depth based on detected or default indent size
+        let depth = indentSize > 0 ? spaces / indentSize : 0
         return (depth, line[index...])
     }
 
@@ -384,8 +407,20 @@ private final class Parser {
             let (key, value) = try parseKeyValuePair(String(content), atDepth: depth)
 
             // Handle path expansion if enabled
-            if expandPaths == .safe && key.contains(".") && key.isValidDottedPath {
-                try expandDottedKey(key, value: value, into: &values, keyOrder: &keyOrder)
+            if (expandPaths == .safe || expandPaths == .automatic) && key.contains(".") && key.isValidDottedPath {
+                do {
+                    try expandDottedKey(key, value: value, into: &values, keyOrder: &keyOrder)
+                } catch {
+                    // For .automatic mode, fall back to literal key on collision
+                    if expandPaths == .automatic {
+                        if !keyOrder.contains(key) {
+                            keyOrder.append(key)
+                        }
+                        values[key] = value
+                    } else {
+                        throw error
+                    }
+                }
             } else {
                 if !keyOrder.contains(key) {
                     keyOrder.append(key)
