@@ -123,7 +123,7 @@ public final class TOONDecoder {
         let parser = Parser(text: text, expandPaths: expandPaths, limits: limits)
         let value = try parser.parse()
 
-        let decoder = _Decoder(value: value, codingPath: [], userInfo: [:])
+        let decoder = Decoder(value: value, codingPath: [], userInfo: [:])
         return try T(from: decoder)
     }
 }
@@ -176,68 +176,6 @@ public enum TOONDecodingError: Error, Equatable {
 
     /// Array length exceeds limit
     case arrayLengthLimitExceeded(length: Int, limit: Int)
-}
-
-// MARK: - Internal Value Representation
-
-/// Intermediate representation for TOON values during decoding
-private enum Value: Equatable {
-    case null
-    case bool(Bool)
-    case int(Int64)
-    case double(Double)
-    case string(String)
-    case array([Value])
-    case object([String: Value], keyOrder: [String])
-
-    var isNull: Bool {
-        if case .null = self { return true }
-        return false
-    }
-
-    var boolValue: Bool? {
-        if case let .bool(v) = self { return v }
-        return nil
-    }
-
-    var intValue: Int64? {
-        if case let .int(v) = self { return v }
-        return nil
-    }
-
-    var doubleValue: Double? {
-        if case let .double(v) = self { return v }
-        // Also allow int to double conversion
-        if case let .int(v) = self { return Double(v) }
-        return nil
-    }
-
-    var stringValue: String? {
-        if case let .string(v) = self { return v }
-        return nil
-    }
-
-    var arrayValue: [Value]? {
-        if case let .array(v) = self { return v }
-        return nil
-    }
-
-    var objectValue: (values: [String: Value], keyOrder: [String])? {
-        if case let .object(values, keyOrder) = self { return (values, keyOrder) }
-        return nil
-    }
-
-    var typeName: String {
-        switch self {
-        case .null: return "null"
-        case .bool: return "bool"
-        case .int: return "int"
-        case .double: return "double"
-        case .string: return "string"
-        case .array: return "array"
-        case .object: return "object"
-        }
-    }
 }
 
 // MARK: - Parser
@@ -1144,10 +1082,11 @@ private final class Parser {
     }
 }
 
-// MARK: - Internal Decoder
+// MARK: -
 
-private extension TOONDecoder {
-    final class _Decoder: Swift.Decoder {
+extension TOONDecoder {
+    /// Internal decoder implementation that conforms to the Decoder protocol
+    private final class Decoder: Swift.Decoder {
         let value: Value
         let codingPath: [CodingKey]
         let userInfo: [CodingUserInfoKey: Any]
@@ -1187,8 +1126,8 @@ private extension TOONDecoder {
 
 // MARK: - Keyed Decoding Container
 
-private extension TOONDecoder {
-    final class KeyedContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
+extension TOONDecoder {
+    private final class KeyedContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
         let values: [String: Value]
         let keyOrder: [String]
         let codingPath: [CodingKey]
@@ -1320,7 +1259,7 @@ private extension TOONDecoder {
                 return try DecodingHelpers.decodeData(from: value) as! T
             }
 
-            let decoder = _Decoder(
+            let decoder = Decoder(
                 value: value,
                 codingPath: codingPath + [key],
                 userInfo: userInfo
@@ -1354,20 +1293,20 @@ private extension TOONDecoder {
 
         func superDecoder() throws -> Swift.Decoder {
             let value = values["super"] ?? .null
-            return _Decoder(value: value, codingPath: codingPath, userInfo: userInfo)
+            return Decoder(value: value, codingPath: codingPath, userInfo: userInfo)
         }
 
         func superDecoder(forKey key: Key) throws -> Swift.Decoder {
             let value = try getValue(forKey: key)
-            return _Decoder(value: value, codingPath: codingPath + [key], userInfo: userInfo)
+            return Decoder(value: value, codingPath: codingPath + [key], userInfo: userInfo)
         }
     }
 }
 
 // MARK: - Unkeyed Decoding Container
 
-private extension TOONDecoder {
-    final class UnkeyedContainer: UnkeyedDecodingContainer {
+extension TOONDecoder {
+    private final class UnkeyedContainer: UnkeyedDecodingContainer {
         let values: [Value]
         let codingPath: [CodingKey]
         let userInfo: [CodingUserInfoKey: Any]
@@ -1494,7 +1433,7 @@ private extension TOONDecoder {
                 return try DecodingHelpers.decodeData(from: value) as! T
             }
 
-            let decoder = _Decoder(
+            let decoder = Decoder(
                 value: value,
                 codingPath: codingPath + [IndexedCodingKey(intValue: currentIndex - 1)],
                 userInfo: userInfo
@@ -1531,7 +1470,7 @@ private extension TOONDecoder {
 
         func superDecoder() throws -> Swift.Decoder {
             let value = try getCurrentValue()
-            return _Decoder(
+            return Decoder(
                 value: value,
                 codingPath: codingPath + [IndexedCodingKey(intValue: currentIndex - 1)],
                 userInfo: userInfo
@@ -1542,8 +1481,8 @@ private extension TOONDecoder {
 
 // MARK: - Single Value Decoding Container
 
-private extension TOONDecoder {
-    final class SingleValueContainer: SingleValueDecodingContainer {
+extension TOONDecoder {
+    private final class SingleValueContainer: SingleValueDecodingContainer {
         let value: Value
         let codingPath: [CodingKey]
         let userInfo: [CodingUserInfoKey: Any]
@@ -1643,13 +1582,73 @@ private extension TOONDecoder {
                 return try DecodingHelpers.decodeData(from: value) as! T
             }
 
-            let decoder = _Decoder(value: value, codingPath: codingPath, userInfo: userInfo)
+            let decoder = Decoder(value: value, codingPath: codingPath, userInfo: userInfo)
             return try T(from: decoder)
         }
     }
 }
 
-// MARK: - Helper Types
+/// Intermediate representation for TOON values during decoding
+private enum Value: Equatable {
+    case null
+    case bool(Bool)
+    case int(Int64)
+    case double(Double)
+    case string(String)
+    case array([Value])
+    case object([String: Value], keyOrder: [String])
+
+    var isNull: Bool {
+        if case .null = self { return true }
+        return false
+    }
+
+    var boolValue: Bool? {
+        if case let .bool(v) = self { return v }
+        return nil
+    }
+
+    var intValue: Int64? {
+        if case let .int(v) = self { return v }
+        return nil
+    }
+
+    var doubleValue: Double? {
+        if case let .double(v) = self { return v }
+        // Also allow int to double conversion
+        if case let .int(v) = self { return Double(v) }
+        return nil
+    }
+
+    var stringValue: String? {
+        if case let .string(v) = self { return v }
+        return nil
+    }
+
+    var arrayValue: [Value]? {
+        if case let .array(v) = self { return v }
+        return nil
+    }
+
+    var objectValue: (values: [String: Value], keyOrder: [String])? {
+        if case let .object(values, keyOrder) = self { return (values, keyOrder) }
+        return nil
+    }
+
+    var typeName: String {
+        switch self {
+        case .null: return "null"
+        case .bool: return "bool"
+        case .int: return "int"
+        case .double: return "double"
+        case .string: return "string"
+        case .array: return "array"
+        case .object: return "object"
+        }
+    }
+}
+
+// MARK: -
 
 private struct IndexedCodingKey: CodingKey {
     let stringValue: String
@@ -1665,8 +1664,6 @@ private struct IndexedCodingKey: CodingKey {
         self.intValue = intValue
     }
 }
-
-// MARK: - Shared Decoding Helpers
 
 private enum DecodingHelpers {
     // ISO8601DateFormatter is not Sendable, so we create a new instance per decode
@@ -1794,7 +1791,7 @@ private enum DecodingHelpers {
     }
 }
 
-// MARK: - String Extensions
+// MARK: -
 
 private extension String {
     func trimmingLeadingSpace() -> String {
