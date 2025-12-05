@@ -1458,20 +1458,6 @@ struct DecoderTests {
         #expect(original == decoded)
     }
 
-    @Test func roundTripLengthMarker() async throws {
-        struct LengthMarkerObject: Codable, Equatable {
-            let tags: [String]
-        }
-
-        let encoder = TOONEncoder()
-        encoder.lengthMarker = .hash
-
-        let original = LengthMarkerObject(tags: ["reading", "gaming", "coding"])
-        let encoded = try encoder.encode(original)
-        let decoded = try decoder.decode(LengthMarkerObject.self, from: encoded)
-        #expect(original == decoded)
-    }
-
     @Test func roundTripKeyFolding() async throws {
         struct NestedObject: Codable, Equatable {
             struct User: Codable, Equatable {

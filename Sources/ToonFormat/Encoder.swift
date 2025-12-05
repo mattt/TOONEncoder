@@ -12,9 +12,6 @@ public final class TOONEncoder {
     /// The delimiter to use for array values and tabular rows.
     public var delimiter: Delimiter = .comma
 
-    /// An optional marker to prefix array lengths in headers.
-    public var lengthMarker: LengthMarker = .none
-
     /// Key folding mode for collapsing single-key object chains into dotted paths.
     ///
     /// When enabled, single-key nested objects like `{ a: { b: { c: 1 } } }`
@@ -87,34 +84,11 @@ public final class TOONEncoder {
         case pipe = "|"
     }
 
-    /// A marker character to prefix array lengths in headers.
-    ///
-    /// Length markers appear before array counts in brackets
-    /// to provide additional clarity about array sizing.
-    ///
-    /// Example with `.none`:
-    /// ```toon
-    /// tags[3]: reading,gaming,coding
-    /// ```
-    ///
-    /// Example with `.hash`:
-    /// ```toon
-    /// tags[#3]: reading,gaming,coding
-    /// ```
-    public enum LengthMarker: CaseIterable, Hashable, Sendable {
-        /// No length marker.
-        case none
-
-        /// Hash symbol prefix (`#`).
-        case hash
-    }
-
     /// Creates a new TOON encoder with default configuration.
     ///
     /// Default settings:
     /// - `indent`: 2 spaces
     /// - `delimiter`: `.comma`
-    /// - `lengthMarker`: `.none`
     /// - `keyFolding`: `.disabled`
     /// - `flattenDepth`: `Int.max`
     public init() {}
@@ -356,8 +330,7 @@ public final class TOONEncoder {
                         length: array.count,
                         key: firstKey,
                         fields: header,
-                        delimiter: delimiter.rawValue,
-                        lengthMarker: lengthMarker == .hash ? "#" : nil
+                        delimiter: delimiter.rawValue
                     )
                     write(
                         depth: depth,
@@ -446,8 +419,7 @@ public final class TOONEncoder {
             let header = formatHeader(
                 length: 0,
                 key: key,
-                delimiter: delimiter.rawValue,
-                lengthMarker: lengthMarker == .hash ? "#" : nil
+                delimiter: delimiter.rawValue
             )
             write(depth: depth, content: header, to: &output)
             return
@@ -515,8 +487,7 @@ public final class TOONEncoder {
         let header = formatHeader(
             length: values.count,
             key: key,
-            delimiter: delimiter.rawValue,
-            lengthMarker: lengthMarker == .hash ? "#" : nil
+            delimiter: delimiter.rawValue
         )
         write(depth: depth, content: header, to: &output)
 
@@ -538,8 +509,7 @@ public final class TOONEncoder {
             length: rows.count,
             key: key,
             fields: header,
-            delimiter: delimiter.rawValue,
-            lengthMarker: lengthMarker == .hash ? "#" : nil
+            delimiter: delimiter.rawValue
         )
         write(depth: depth, content: headerStr, to: &output)
 
@@ -555,8 +525,7 @@ public final class TOONEncoder {
         let header = formatHeader(
             length: items.count,
             key: key,
-            delimiter: delimiter.rawValue,
-            lengthMarker: lengthMarker == .hash ? "#" : nil
+            delimiter: delimiter.rawValue
         )
         write(depth: depth, content: header, to: &output)
 
@@ -703,8 +672,7 @@ public final class TOONEncoder {
         let header = formatHeader(
             length: values.count,
             key: key,
-            delimiter: delimiter.rawValue,
-            lengthMarker: lengthMarker == .hash ? "#" : nil
+            delimiter: delimiter.rawValue
         )
         let joinedValue = joinEncodedValues(values, delimiter: delimiter.rawValue)
 
@@ -718,8 +686,7 @@ public final class TOONEncoder {
         length: Int,
         key: String? = nil,
         fields: [String]? = nil,
-        delimiter: String = ",",
-        lengthMarker: String? = nil
+        delimiter: String = ","
     ) -> String {
         var header = ""
 
@@ -729,7 +696,7 @@ public final class TOONEncoder {
 
         // Only include delimiter if it's not the default (comma)
         let delimiterSuffix = delimiter != "," ? delimiter : ""
-        header += "[\(lengthMarker ?? "")\(length)\(delimiterSuffix)]"
+        header += "[\(length)\(delimiterSuffix)]"
 
         if let fields = fields {
             let quotedFields = fields.map { encodeKey($0) }
