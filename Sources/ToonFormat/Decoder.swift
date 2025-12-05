@@ -1223,19 +1223,19 @@ extension TOONDecoder {
         }
 
         func decode(_: Int.Type, forKey key: Key) throws -> Int {
-            try DecodingHelpers.decodeInt(from: getValue(forKey: key))
+            try decodeInt(from: getValue(forKey: key))
         }
 
         func decode(_: Int8.Type, forKey key: Key) throws -> Int8 {
-            try DecodingHelpers.decodeInt8(from: getValue(forKey: key))
+            try decodeInt8(from: getValue(forKey: key))
         }
 
         func decode(_: Int16.Type, forKey key: Key) throws -> Int16 {
-            try DecodingHelpers.decodeInt16(from: getValue(forKey: key))
+            try decodeInt16(from: getValue(forKey: key))
         }
 
         func decode(_: Int32.Type, forKey key: Key) throws -> Int32 {
-            try DecodingHelpers.decodeInt32(from: getValue(forKey: key))
+            try decodeInt32(from: getValue(forKey: key))
         }
 
         func decode(_: Int64.Type, forKey key: Key) throws -> Int64 {
@@ -1247,23 +1247,23 @@ extension TOONDecoder {
         }
 
         func decode(_: UInt.Type, forKey key: Key) throws -> UInt {
-            try DecodingHelpers.decodeUInt(from: getValue(forKey: key))
+            try decodeUInt(from: getValue(forKey: key))
         }
 
         func decode(_: UInt8.Type, forKey key: Key) throws -> UInt8 {
-            try DecodingHelpers.decodeUInt8(from: getValue(forKey: key))
+            try decodeUInt8(from: getValue(forKey: key))
         }
 
         func decode(_: UInt16.Type, forKey key: Key) throws -> UInt16 {
-            try DecodingHelpers.decodeUInt16(from: getValue(forKey: key))
+            try decodeUInt16(from: getValue(forKey: key))
         }
 
         func decode(_: UInt32.Type, forKey key: Key) throws -> UInt32 {
-            try DecodingHelpers.decodeUInt32(from: getValue(forKey: key))
+            try decodeUInt32(from: getValue(forKey: key))
         }
 
         func decode(_: UInt64.Type, forKey key: Key) throws -> UInt64 {
-            try DecodingHelpers.decodeUInt64(from: getValue(forKey: key))
+            try decodeUInt64(from: getValue(forKey: key))
         }
 
         func decode<T>(_: T.Type, forKey key: Key) throws -> T where T: Decodable {
@@ -1271,15 +1271,15 @@ extension TOONDecoder {
 
             // Handle special types
             if T.self == Date.self {
-                return try DecodingHelpers.decodeDate(from: value) as! T
+                return try decodeDate(from: value) as! T
             }
 
             if T.self == URL.self {
-                return try DecodingHelpers.decodeURL(from: value) as! T
+                return try decodeURL(from: value) as! T
             }
 
             if T.self == Data.self {
-                return try DecodingHelpers.decodeData(from: value) as! T
+                return try decodeData(from: value) as! T
             }
 
             let decoder = Decoder(
@@ -1397,19 +1397,19 @@ extension TOONDecoder {
         }
 
         func decode(_: Int.Type) throws -> Int {
-            try DecodingHelpers.decodeInt(from: getCurrentValue())
+            try decodeInt(from: getCurrentValue())
         }
 
         func decode(_: Int8.Type) throws -> Int8 {
-            try DecodingHelpers.decodeInt8(from: getCurrentValue())
+            try decodeInt8(from: getCurrentValue())
         }
 
         func decode(_: Int16.Type) throws -> Int16 {
-            try DecodingHelpers.decodeInt16(from: getCurrentValue())
+            try decodeInt16(from: getCurrentValue())
         }
 
         func decode(_: Int32.Type) throws -> Int32 {
-            try DecodingHelpers.decodeInt32(from: getCurrentValue())
+            try decodeInt32(from: getCurrentValue())
         }
 
         func decode(_: Int64.Type) throws -> Int64 {
@@ -1421,23 +1421,23 @@ extension TOONDecoder {
         }
 
         func decode(_: UInt.Type) throws -> UInt {
-            try DecodingHelpers.decodeUInt(from: getCurrentValue())
+            try decodeUInt(from: getCurrentValue())
         }
 
         func decode(_: UInt8.Type) throws -> UInt8 {
-            try DecodingHelpers.decodeUInt8(from: getCurrentValue())
+            try decodeUInt8(from: getCurrentValue())
         }
 
         func decode(_: UInt16.Type) throws -> UInt16 {
-            try DecodingHelpers.decodeUInt16(from: getCurrentValue())
+            try decodeUInt16(from: getCurrentValue())
         }
 
         func decode(_: UInt32.Type) throws -> UInt32 {
-            try DecodingHelpers.decodeUInt32(from: getCurrentValue())
+            try decodeUInt32(from: getCurrentValue())
         }
 
         func decode(_: UInt64.Type) throws -> UInt64 {
-            try DecodingHelpers.decodeUInt64(from: getCurrentValue())
+            try decodeUInt64(from: getCurrentValue())
         }
 
         func decode<T>(_: T.Type) throws -> T where T: Decodable {
@@ -1445,15 +1445,15 @@ extension TOONDecoder {
 
             // Handle special types
             if T.self == Date.self {
-                return try DecodingHelpers.decodeDate(from: value) as! T
+                return try decodeDate(from: value) as! T
             }
 
             if T.self == URL.self {
-                return try DecodingHelpers.decodeURL(from: value) as! T
+                return try decodeURL(from: value) as! T
             }
 
             if T.self == Data.self {
-                return try DecodingHelpers.decodeData(from: value) as! T
+                return try decodeData(from: value) as! T
             }
 
             let decoder = Decoder(
@@ -1549,19 +1549,19 @@ extension TOONDecoder {
         }
 
         func decode(_: Int.Type) throws -> Int {
-            try DecodingHelpers.decodeInt(from: value)
+            try decodeInt(from: value)
         }
 
         func decode(_: Int8.Type) throws -> Int8 {
-            try DecodingHelpers.decodeInt8(from: value)
+            try decodeInt8(from: value)
         }
 
         func decode(_: Int16.Type) throws -> Int16 {
-            try DecodingHelpers.decodeInt16(from: value)
+            try decodeInt16(from: value)
         }
 
         func decode(_: Int32.Type) throws -> Int32 {
-            try DecodingHelpers.decodeInt32(from: value)
+            try decodeInt32(from: value)
         }
 
         func decode(_: Int64.Type) throws -> Int64 {
@@ -1572,37 +1572,37 @@ extension TOONDecoder {
         }
 
         func decode(_: UInt.Type) throws -> UInt {
-            try DecodingHelpers.decodeUInt(from: value)
+            try decodeUInt(from: value)
         }
 
         func decode(_: UInt8.Type) throws -> UInt8 {
-            try DecodingHelpers.decodeUInt8(from: value)
+            try decodeUInt8(from: value)
         }
 
         func decode(_: UInt16.Type) throws -> UInt16 {
-            try DecodingHelpers.decodeUInt16(from: value)
+            try decodeUInt16(from: value)
         }
 
         func decode(_: UInt32.Type) throws -> UInt32 {
-            try DecodingHelpers.decodeUInt32(from: value)
+            try decodeUInt32(from: value)
         }
 
         func decode(_: UInt64.Type) throws -> UInt64 {
-            try DecodingHelpers.decodeUInt64(from: value)
+            try decodeUInt64(from: value)
         }
 
         func decode<T>(_: T.Type) throws -> T where T: Decodable {
             // Handle special types
             if T.self == Date.self {
-                return try DecodingHelpers.decodeDate(from: value) as! T
+                return try decodeDate(from: value) as! T
             }
 
             if T.self == URL.self {
-                return try DecodingHelpers.decodeURL(from: value) as! T
+                return try decodeURL(from: value) as! T
             }
 
             if T.self == Data.self {
-                return try DecodingHelpers.decodeData(from: value) as! T
+                return try decodeData(from: value) as! T
             }
 
             let decoder = Decoder(value: value, codingPath: codingPath, userInfo: userInfo)
@@ -1613,130 +1613,128 @@ extension TOONDecoder {
 
 // MARK: - Decoding Helpers
 
-private enum DecodingHelpers {
-    // ISO8601DateFormatter is not Sendable, so we create a new instance per decode
-    // This is thread-safe and avoids shared mutable state
-    static func decodeDate(from value: Value) throws -> Date {
-        guard let stringValue = value.stringValue else {
-            throw TOONDecodingError.typeMismatch(expected: "date string", actual: value.typeName)
-        }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        guard let date = formatter.date(from: stringValue) else {
-            throw TOONDecodingError.dataCorrupted("Invalid date format: \(stringValue)")
-        }
-        return date
+// ISO8601DateFormatter is not Sendable, so we create a new instance per decode
+// This is thread-safe and avoids shared mutable state
+private func decodeDate(from value: Value) throws -> Date {
+    guard let stringValue = value.stringValue else {
+        throw TOONDecodingError.typeMismatch(expected: "date string", actual: value.typeName)
     }
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let date = formatter.date(from: stringValue) else {
+        throw TOONDecodingError.dataCorrupted("Invalid date format: \(stringValue)")
+    }
+    return date
+}
 
-    static func decodeURL(from value: Value) throws -> URL {
-        guard let stringValue = value.stringValue else {
-            throw TOONDecodingError.typeMismatch(expected: "URL string", actual: value.typeName)
-        }
-        guard let url = URL(string: stringValue) else {
-            throw TOONDecodingError.dataCorrupted("Invalid URL: \(stringValue)")
-        }
-        return url
+private func decodeURL(from value: Value) throws -> URL {
+    guard let stringValue = value.stringValue else {
+        throw TOONDecodingError.typeMismatch(expected: "URL string", actual: value.typeName)
     }
+    guard let url = URL(string: stringValue) else {
+        throw TOONDecodingError.dataCorrupted("Invalid URL: \(stringValue)")
+    }
+    return url
+}
 
-    static func decodeData(from value: Value) throws -> Data {
-        guard let stringValue = value.stringValue else {
-            throw TOONDecodingError.typeMismatch(expected: "base64 string", actual: value.typeName)
-        }
-        guard let data = Data(base64Encoded: stringValue) else {
-            throw TOONDecodingError.dataCorrupted("Invalid base64 data: \(stringValue)")
-        }
-        return data
+private func decodeData(from value: Value) throws -> Data {
+    guard let stringValue = value.stringValue else {
+        throw TOONDecodingError.typeMismatch(expected: "base64 string", actual: value.typeName)
     }
+    guard let data = Data(base64Encoded: stringValue) else {
+        throw TOONDecodingError.dataCorrupted("Invalid base64 data: \(stringValue)")
+    }
+    return data
+}
 
-    static func decodeInt8(from value: Value) throws -> Int8 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "int8", actual: value.typeName)
-        }
-        guard let result = Int8(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int8")
-        }
-        return result
+private func decodeInt8(from value: Value) throws -> Int8 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "int8", actual: value.typeName)
     }
+    guard let result = Int8(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int8")
+    }
+    return result
+}
 
-    static func decodeInt16(from value: Value) throws -> Int16 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "int16", actual: value.typeName)
-        }
-        guard let result = Int16(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int16")
-        }
-        return result
+private func decodeInt16(from value: Value) throws -> Int16 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "int16", actual: value.typeName)
     }
+    guard let result = Int16(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int16")
+    }
+    return result
+}
 
-    static func decodeInt32(from value: Value) throws -> Int32 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "int32", actual: value.typeName)
-        }
-        guard let result = Int32(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int32")
-        }
-        return result
+private func decodeInt32(from value: Value) throws -> Int32 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "int32", actual: value.typeName)
     }
+    guard let result = Int32(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int32")
+    }
+    return result
+}
 
-    static func decodeInt(from value: Value) throws -> Int {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "int", actual: value.typeName)
-        }
-        guard let result = Int(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int")
-        }
-        return result
+private func decodeInt(from value: Value) throws -> Int {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "int", actual: value.typeName)
     }
+    guard let result = Int(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in Int")
+    }
+    return result
+}
 
-    static func decodeUInt(from value: Value) throws -> UInt {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "uint", actual: value.typeName)
-        }
-        guard let result = UInt(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt")
-        }
-        return result
+private func decodeUInt(from value: Value) throws -> UInt {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "uint", actual: value.typeName)
     }
+    guard let result = UInt(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt")
+    }
+    return result
+}
 
-    static func decodeUInt8(from value: Value) throws -> UInt8 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "uint8", actual: value.typeName)
-        }
-        guard let result = UInt8(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt8")
-        }
-        return result
+private func decodeUInt8(from value: Value) throws -> UInt8 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "uint8", actual: value.typeName)
     }
+    guard let result = UInt8(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt8")
+    }
+    return result
+}
 
-    static func decodeUInt16(from value: Value) throws -> UInt16 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "uint16", actual: value.typeName)
-        }
-        guard let result = UInt16(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt16")
-        }
-        return result
+private func decodeUInt16(from value: Value) throws -> UInt16 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "uint16", actual: value.typeName)
     }
+    guard let result = UInt16(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt16")
+    }
+    return result
+}
 
-    static func decodeUInt32(from value: Value) throws -> UInt32 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "uint32", actual: value.typeName)
-        }
-        guard let result = UInt32(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt32")
-        }
-        return result
+private func decodeUInt32(from value: Value) throws -> UInt32 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "uint32", actual: value.typeName)
     }
+    guard let result = UInt32(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt32")
+    }
+    return result
+}
 
-    static func decodeUInt64(from value: Value) throws -> UInt64 {
-        guard let intValue = value.intValue else {
-            throw TOONDecodingError.typeMismatch(expected: "uint64", actual: value.typeName)
-        }
-        guard let result = UInt64(exactly: intValue) else {
-            throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt64")
-        }
-        return result
+private func decodeUInt64(from value: Value) throws -> UInt64 {
+    guard let intValue = value.intValue else {
+        throw TOONDecodingError.typeMismatch(expected: "uint64", actual: value.typeName)
     }
+    guard let result = UInt64(exactly: intValue) else {
+        throw TOONDecodingError.dataCorrupted("Value \(intValue) does not fit in UInt64")
+    }
+    return result
 }
 
 // MARK: -
