@@ -530,11 +530,10 @@ private final class Parser {
         let count: Int
         let delimiter: String
         let fields: [String]?
-        let hasLengthMarker: Bool
     }
 
     private func parseArrayHeader(_ content: String) throws -> ArrayHeader {
-        // Pattern: [key][#N{delimiter}]{fields}:
+        // Pattern: [key][N{delimiter}]{fields}:
         // Examples: [3]:, key[2]:, items[3]{a,b,c}:, items[2|]{a|b}:
 
         var remaining = content[...]
@@ -563,11 +562,9 @@ private final class Parser {
         }
         remaining = remaining.dropFirst()
 
-        // Check for length marker #
-        var hasLengthMarker = false
+        // Reject length marker # (removed in TOON v2.0)
         if remaining.first == "#" {
-            hasLengthMarker = true
-            remaining = remaining.dropFirst()
+            throw TOONDecodingError.invalidHeader("Length marker '#' is not supported in TOON v3: \(content)")
         }
 
         // Parse count
@@ -615,8 +612,7 @@ private final class Parser {
             key: key,
             count: count,
             delimiter: delimiter,
-            fields: fields,
-            hasLengthMarker: hasLengthMarker
+            fields: fields
         )
     }
 
