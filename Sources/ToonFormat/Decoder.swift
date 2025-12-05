@@ -1631,7 +1631,7 @@ private func decodeURL(from value: Value) throws -> URL {
     guard let stringValue = value.stringValue else {
         throw TOONDecodingError.typeMismatch(expected: "URL string", actual: value.typeName)
     }
-    guard let url = URL(string: stringValue) else {
+    guard !stringValue.isEmpty, let url = URL(string: stringValue) else {
         throw TOONDecodingError.dataCorrupted("Invalid URL: \(stringValue)")
     }
     return url
