@@ -1023,62 +1023,52 @@ private final class Parser {
             keyOrder.append(firstKey)
         }
 
-        // Build nested structure
-        var currentValues = values
-        var currentPath = firstKey
-
-        for (i, segment) in segments.enumerated() {
-            if i == segments.count - 1 {
-                // Last segment - set the value
-                if i == 0 {
-                    throw TOONDecodingError.dataCorrupted("Invalid path expansion")
-                }
-            } else {
-                // Intermediate segment - ensure object exists
-                let nextSegment = segments[i + 1]
-                currentPath = i == 0 ? segment : "\(currentPath).\(segment)"
-
-                if let existing = currentValues[segment] {
-                    // Check for collision
-                    if case var .object(nested, nestedOrder) = existing {
-                        // Continue building into existing object
-                        if i == segments.count - 2 {
-                            // Set value in nested
-                            if !nestedOrder.contains(nextSegment) {
-                                nestedOrder.append(nextSegment)
-                            }
-                            nested[nextSegment] = value
-                            currentValues[segment] = .object(nested, keyOrder: nestedOrder)
-                        } else {
-                            // Need to go deeper
-                            currentValues = nested
-                        }
-                    } else {
-                        throw TOONDecodingError.pathCollision(path: currentPath, line: currentLine)
-                    }
-                } else {
-                    // Create new nested object
-                    if i == segments.count - 2 {
-                        currentValues[segment] = .object([nextSegment: value], keyOrder: [nextSegment])
-                    } else {
-                        currentValues[segment] = .object([:], keyOrder: [])
-                    }
-                }
-            }
-        }
-
-        // Rebuild the nested structure from the first key
-        values[firstKey] = buildNestedObject(segments: Array(segments.dropFirst()), value: value)
+        // Merge the value into the nested structure
+        values[firstKey] = try mergeValueAtPath(
+            into: values[firstKey],
+            segments: Array(segments.dropFirst()),
+            value: value
+        )
     }
 
-    private func buildNestedObject(segments: [String], value: Value) -> Value {
-        guard let first = segments.first else {
+    private func mergeValueAtPath(
+        into existing: Value?,
+        segments: [String],
+        value: Value
+    ) throws -> Value {
+        guard let segment = segments.first else {
             return value
         }
 
-        let rest = Array(segments.dropFirst())
-        let nested = buildNestedObject(segments: rest, value: value)
-        return .object([first: nested], keyOrder: [first])
+        let remainingSegments = Array(segments.dropFirst())
+
+        // Get or create object at current level
+        var objectValues: [String: Value]
+        var objectKeyOrder: [String]
+
+        if let existing = existing {
+            guard case let .object(vals, order) = existing else {
+                throw TOONDecodingError.pathCollision(path: segment, line: currentLine)
+            }
+            objectValues = vals
+            objectKeyOrder = order
+        } else {
+            objectValues = [:]
+            objectKeyOrder = []
+        }
+
+        // Recursively merge
+        objectValues[segment] = try mergeValueAtPath(
+            into: objectValues[segment],
+            segments: remainingSegments,
+            value: value
+        )
+
+        if !objectKeyOrder.contains(segment) {
+            objectKeyOrder.append(segment)
+        }
+
+        return .object(objectValues, keyOrder: objectKeyOrder)
     }
 }
 
