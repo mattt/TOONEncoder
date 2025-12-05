@@ -1072,7 +1072,7 @@ private final class Parser {
     }
 }
 
-// MARK: -
+// MARK: - Internal Decoder
 
 extension TOONDecoder {
     /// Internal decoder implementation that conforms to the Decoder protocol
@@ -1578,82 +1578,7 @@ extension TOONDecoder {
     }
 }
 
-/// Intermediate representation for TOON values during decoding
-private enum Value: Equatable {
-    case null
-    case bool(Bool)
-    case int(Int64)
-    case double(Double)
-    case string(String)
-    case array([Value])
-    case object([String: Value], keyOrder: [String])
-
-    var isNull: Bool {
-        if case .null = self { return true }
-        return false
-    }
-
-    var boolValue: Bool? {
-        if case let .bool(v) = self { return v }
-        return nil
-    }
-
-    var intValue: Int64? {
-        if case let .int(v) = self { return v }
-        return nil
-    }
-
-    var doubleValue: Double? {
-        if case let .double(v) = self { return v }
-        // Also allow int to double conversion
-        if case let .int(v) = self { return Double(v) }
-        return nil
-    }
-
-    var stringValue: String? {
-        if case let .string(v) = self { return v }
-        return nil
-    }
-
-    var arrayValue: [Value]? {
-        if case let .array(v) = self { return v }
-        return nil
-    }
-
-    var objectValue: (values: [String: Value], keyOrder: [String])? {
-        if case let .object(values, keyOrder) = self { return (values, keyOrder) }
-        return nil
-    }
-
-    var typeName: String {
-        switch self {
-        case .null: return "null"
-        case .bool: return "bool"
-        case .int: return "int"
-        case .double: return "double"
-        case .string: return "string"
-        case .array: return "array"
-        case .object: return "object"
-        }
-    }
-}
-
-// MARK: -
-
-private struct IndexedCodingKey: CodingKey {
-    let stringValue: String
-    let intValue: Int?
-
-    init(stringValue: String) {
-        self.stringValue = stringValue
-        intValue = nil
-    }
-
-    init(intValue: Int) {
-        stringValue = String(intValue)
-        self.intValue = intValue
-    }
-}
+// MARK: - Decoding Helpers
 
 private enum DecodingHelpers {
     // ISO8601DateFormatter is not Sendable, so we create a new instance per decode
@@ -1798,16 +1723,14 @@ private extension String {
 }
 
 private extension Substring {
+    func trimmingLeadingSpace() -> Substring {
+        guard let first = first, first == " " else { return self }
+        return dropFirst()
+    }
+
     var isValidIdentifier: Bool {
         guard let first = first else { return false }
         guard first.isLetter || first == "_" else { return false }
         return dropFirst().allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" }
-    }
-}
-
-private extension Substring {
-    func trimmingLeadingSpace() -> Substring {
-        guard let first = first, first == " " else { return self }
-        return dropFirst()
     }
 }

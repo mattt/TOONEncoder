@@ -20,14 +20,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ToonFormat",
-            dependencies: ["TOONEncoder", "TOONDecoder"]
-        ),
-        .target(
-            name: "TOONEncoder"
-        ),
-        .target(
-            name: "TOONDecoder"
+            name: "ToonFormat"
         ),
         .testTarget(
             name: "ToonFormatTests",

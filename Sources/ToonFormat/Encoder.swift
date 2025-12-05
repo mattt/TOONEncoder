@@ -748,7 +748,7 @@ public final class TOONEncoder {
     }
 }
 
-// MARK: -
+// MARK: - Internal Encoder
 
 extension TOONEncoder {
     /// Internal encoder implementation that conforms to the Encoder protocol
@@ -1344,188 +1344,7 @@ extension TOONEncoder {
     }
 }
 
-/// Intermediate representation for TOON values during encoding
-private enum Value: Equatable {
-    case null
-    case bool(Bool)
-    case int(Int64)
-    case double(Double)
-    case string(String)
-    case date(Date)
-    case url(URL)
-    case data(Data)
-    case array([Value])
-    case object([String: Value], keyOrder: [String])
-
-    /// Creates a value from any Encodable value
-    static func from(_ value: Any) -> Value {
-        if value is NSNull {
-            return .null
-        }
-
-        if let boolValue = value as? Bool {
-            return .bool(boolValue)
-        }
-
-        if let intValue = value as? Int {
-            return .int(Int64(intValue))
-        }
-        if let int8Value = value as? Int8 {
-            return .int(Int64(int8Value))
-        }
-        if let int16Value = value as? Int16 {
-            return .int(Int64(int16Value))
-        }
-        if let int32Value = value as? Int32 {
-            return .int(Int64(int32Value))
-        }
-        if let int64Value = value as? Int64 {
-            return .int(int64Value)
-        }
-
-        if let uintValue = value as? UInt {
-            return .int(Int64(uintValue))
-        }
-        if let uint8Value = value as? UInt8 {
-            return .int(Int64(uint8Value))
-        }
-        if let uint16Value = value as? UInt16 {
-            return .int(Int64(uint16Value))
-        }
-        if let uint32Value = value as? UInt32 {
-            return .int(Int64(uint32Value))
-        }
-        if let uint64Value = value as? UInt64 {
-            if uint64Value <= Int64.max {
-                return .int(Int64(uint64Value))
-            } else {
-                return .string(String(uint64Value))
-            }
-        }
-
-        if let floatValue = value as? Float {
-            return floatValue.isFinite ? .double(Double(floatValue)) : .null
-        }
-        if let doubleValue = value as? Double {
-            return doubleValue.isFinite ? .double(doubleValue) : .null
-        }
-
-        if let stringValue = value as? String {
-            return .string(stringValue)
-        }
-
-        if let dateValue = value as? Date {
-            return .date(dateValue)
-        }
-
-        if let urlValue = value as? URL {
-            return .url(urlValue)
-        }
-
-        if let dataValue = value as? Data {
-            return .data(dataValue)
-        }
-
-        if let arrayValue = value as? [Any] {
-            return .array(arrayValue.map(Value.from))
-        }
-
-        if let dictionaryValue = value as? [String: Any] {
-            var object: [String: Value] = [:]
-            var keyOrder: [String] = []
-            for (key, value) in dictionaryValue {
-                if !keyOrder.contains(key) {
-                    keyOrder.append(key)
-                }
-                object[key] = Value.from(value)
-            }
-            return .object(object, keyOrder: keyOrder)
-        }
-
-        return .null
-    }
-
-    var isPrimitive: Bool {
-        switch self {
-        case .null, .bool, .int, .double, .string, .date, .url, .data:
-            return true
-        case .array, .object:
-            return false
-        }
-    }
-
-    var isArray: Bool {
-        if case .array = self { return true }
-        return false
-    }
-
-    var isArrayOfPrimitives: Bool {
-        guard let array = arrayValue else { return false }
-        return array.allSatisfy { $0.isPrimitive }
-    }
-
-    var isArrayOfArrays: Bool {
-        guard let array = arrayValue else { return false }
-        return array.allSatisfy { $0.isArray }
-    }
-
-    var isArrayOfObjects: Bool {
-        guard let array = arrayValue else { return false }
-        return array.allSatisfy { $0.isObject }
-    }
-
-    var isObject: Bool {
-        if case .object = self { return true }
-        return false
-    }
-
-    var arrayValue: [Value]? {
-        if case .array(let values) = self { return values }
-        return nil
-    }
-
-    var objectValue: (values: [String: Value], keyOrder: [String])? {
-        if case .object(let values, let keyOrder) = self { return (values, keyOrder) }
-        return nil
-    }
-
-    var stringValue: String? {
-        if case .string(let str) = self { return str }
-        return nil
-    }
-
-    var intValue: Int64? {
-        if case .int(let val) = self { return val }
-        return nil
-    }
-
-    var doubleValue: Double? {
-        if case .double(let val) = self { return val }
-        return nil
-    }
-
-    var boolValue: Bool? {
-        if case .bool(let val) = self { return val }
-        return nil
-    }
-}
-
-// MARK: -
-
-private struct IndexedCodingKey: CodingKey {
-    let stringValue: String
-    let intValue: Int?
-
-    init(stringValue: String) {
-        self.stringValue = stringValue
-        self.intValue = nil
-    }
-
-    init(intValue: Int) {
-        self.stringValue = String(intValue)
-        self.intValue = intValue
-    }
-}
+// MARK: - Number Formatter
 
 // Shared number formatter that's used to avoid scientific notation
 // and format numbers in canonical decimal form (no trailing zeros)
@@ -1539,9 +1358,9 @@ private let numberFormatter: NumberFormatter = {
     return formatter
 }()
 
-// MARK: -
+// MARK: - String Extensions
 
-private extension String {
+extension String {
     var escaped: String {
         return
             replacingOccurrences(of: "\\", with: "\\\\")
@@ -1551,7 +1370,7 @@ private extension String {
             .replacingOccurrences(of: "\t", with: "\\t")
     }
 
-    var isNumericLike: Bool {
+    fileprivate var isNumericLike: Bool {
         // Match numbers like: 42, -3.14, 1e-6, 05, etc.
         return range(
             of: #"^-?\d+(?:\.\d+)?(?:e[+-]?\d+)?$"#,
@@ -1560,7 +1379,7 @@ private extension String {
             || range(of: #"^0\d+$"#, options: .regularExpression) != nil
     }
 
-    var isPaddedWithWhitespace: Bool {
+    fileprivate var isPaddedWithWhitespace: Bool {
         return self != trimmingCharacters(in: .whitespaces)
     }
 
