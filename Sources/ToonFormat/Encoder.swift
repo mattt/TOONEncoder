@@ -1,24 +1,21 @@
 import Foundation
 
-/// An encoder that converts Swift values to TOON format
+/// An encoder that converts Swift values into TOON format.
 ///
 /// This encoder conforms to the TOON (Token-Oriented Object Notation) specification version 3.0.
-/// For more information, see: https://github.com/toon-format/spec
+/// For more information, see https://github.com/toon-format/spec
 public final class TOONEncoder {
 
-    /// The TOON specification version this encoder conforms to
-    public static let specVersion = "3.0"
-
-    /// Number of spaces per indentation level
+    /// The number of spaces per indentation level.
     public var indent: Int = 2
 
-    /// Delimiter to use for array values and tabular rows
+    /// The delimiter to use for array values and tabular rows.
     public var delimiter: Delimiter = .comma
 
-    /// Optional marker to prefix array lengths in headers
+    /// An optional marker to prefix array lengths in headers.
     public var lengthMarker: LengthMarker = .none
 
-    /// Key folding mode for collapsing single-key object chains into dotted paths
+    /// Key folding mode for collapsing single-key object chains into dotted paths.
     ///
     /// When enabled, single-key nested objects like `{ a: { b: { c: 1 } } }`
     /// are collapsed into `a.b.c: 1`. Only applies when all segments are valid identifiers.
@@ -30,11 +27,11 @@ public final class TOONEncoder {
     /// ```
     public var keyFolding: KeyFolding = .disabled
 
-    /// Maximum number of segments to include in a folded path when `keyFolding` is `.safe`.
+    /// The maximum number of segments to include in a folded path when `keyFolding` is `.safe`.
     ///
     /// Controls how many nested single-key objects are collapsed into a dotted path.
-    /// - Default is `Int.max` (unlimited folding depth)
-    /// - Values less than 2 have no practical folding effect
+    /// - Default is `Int.max` (unlimited folding depth).
+    /// - Values less than 2 have no practical folding effect.
     ///
     /// Example with `flattenDepth = 2`:
     /// - Input: `{ a: { b: { c: { d: 1 } } } }`
@@ -45,16 +42,18 @@ public final class TOONEncoder {
     /// - Output: `a.b.c: 1`
     public var flattenDepth: Int = .max
 
-    /// Key folding mode
+    /// Key folding mode.
     public enum KeyFolding: Hashable, Sendable {
-        /// No key folding
+        /// No key folding.
         case disabled
 
-        /// Safe key folding: only fold when all segments are valid identifiers
+        /// Safe key folding.
+        ///
+        /// Only folds when all segments are valid identifiers.
         case safe
     }
 
-    /// Delimiter character used to separate array values and tabular row cells
+    /// The delimiter character used to separate array values and tabular row cells.
     ///
     /// The delimiter determines how multiple values are separated in inline arrays
     /// and tabular data rows.
@@ -78,20 +77,20 @@ public final class TOONEncoder {
     ///   B2|Gadget
     /// ```
     public enum Delimiter: String, CaseIterable, Hashable, Sendable {
-        /// Comma separator: `,`
+        /// Comma separator (`,`).
         case comma = ","
 
-        /// Tab separator: `\t`
+        /// Tab separator (`\t`).
         case tab = "\t"
 
-        /// Pipe separator: `|`
+        /// Pipe separator (`|`).
         case pipe = "|"
     }
 
-    /// Marker character to prefix array lengths in headers
+    /// A marker character to prefix array lengths in headers.
     ///
-    /// Length markers appear before array counts in brackets to provide
-    /// additional clarity about array sizing.
+    /// Length markers appear before array counts in brackets
+    /// to provide additional clarity about array sizing.
     ///
     /// Example with `.none`:
     /// ```toon
@@ -103,14 +102,14 @@ public final class TOONEncoder {
     /// tags[#3]: reading,gaming,coding
     /// ```
     public enum LengthMarker: CaseIterable, Hashable, Sendable {
-        /// No length marker
+        /// No length marker.
         case none
 
-        /// Hash symbol prefix: `#`
+        /// Hash symbol prefix (`#`).
         case hash
     }
 
-    /// Creates a new TOON encoder with default configuration
+    /// Creates a new TOON encoder with default configuration.
     ///
     /// Default settings:
     /// - `indent`: 2 spaces
@@ -120,11 +119,11 @@ public final class TOONEncoder {
     /// - `flattenDepth`: `Int.max`
     public init() {}
 
-    /// Encodes the given value to TOON format
+    /// Encodes the given value into TOON format.
     ///
-    /// - Parameter value: An `Encodable` value to convert to TOON format
-    /// - Returns: UTF-8 encoded data containing the TOON representation
-    /// - Throws: An error if encoding fails
+    /// - Parameter value: An `Encodable` value to convert to TOON format.
+    /// - Returns: UTF-8 encoded data containing the TOON representation.
+    /// - Throws: An error if encoding fails.
     ///
     /// This method handles special Foundation types (`Date`, `URL`, `Data`) as well as
     /// standard Swift types and custom `Encodable` types. Arrays of objects with consistent
@@ -195,12 +194,15 @@ public final class TOONEncoder {
         }
     }
 
-    /// Attempts to fold a key path by following single-key object chains
-    /// Returns the folded path, final value, and whether we hit the depth limit, or nil if folding is not safe
+    /// Attempts to fold a key path by following single-key object chains.
+    ///
+    /// Returns the folded path, final value, and whether the depth limit was reached,
+    /// or `nil` if folding is not safe.
+    ///
     /// - Parameters:
-    ///   - key: The starting key of the chain
-    ///   - value: The value associated with the key
-    ///   - siblingKeys: Other keys at the same object depth (for collision avoidance)
+    ///   - key: The starting key of the chain.
+    ///   - value: The value associated with the key.
+    ///   - siblingKeys: Other keys at the same object depth (for collision avoidance).
     private func tryFoldKeyPath(
         key: String,
         value: Value,
@@ -751,10 +753,10 @@ public final class TOONEncoder {
     }
 }
 
-// MARK: -
+// MARK: - Internal Encoder
 
 extension TOONEncoder {
-    /// Internal encoder implementation that conforms to the Encoder protocol
+    /// Internal encoder implementation that conforms to the `Encoder` protocol.
     private final class Encoder: Swift.Encoder {
         let codingPath: [any Swift.CodingKey]
         let userInfo: [CodingUserInfoKey: Any]
@@ -1347,188 +1349,7 @@ extension TOONEncoder {
     }
 }
 
-/// Intermediate representation for TOON values during encoding
-private enum Value: Equatable {
-    case null
-    case bool(Bool)
-    case int(Int64)
-    case double(Double)
-    case string(String)
-    case date(Date)
-    case url(URL)
-    case data(Data)
-    case array([Value])
-    case object([String: Value], keyOrder: [String])
-
-    /// Creates a value from any Encodable value
-    static func from(_ value: Any) -> Value {
-        if value is NSNull {
-            return .null
-        }
-
-        if let boolValue = value as? Bool {
-            return .bool(boolValue)
-        }
-
-        if let intValue = value as? Int {
-            return .int(Int64(intValue))
-        }
-        if let int8Value = value as? Int8 {
-            return .int(Int64(int8Value))
-        }
-        if let int16Value = value as? Int16 {
-            return .int(Int64(int16Value))
-        }
-        if let int32Value = value as? Int32 {
-            return .int(Int64(int32Value))
-        }
-        if let int64Value = value as? Int64 {
-            return .int(int64Value)
-        }
-
-        if let uintValue = value as? UInt {
-            return .int(Int64(uintValue))
-        }
-        if let uint8Value = value as? UInt8 {
-            return .int(Int64(uint8Value))
-        }
-        if let uint16Value = value as? UInt16 {
-            return .int(Int64(uint16Value))
-        }
-        if let uint32Value = value as? UInt32 {
-            return .int(Int64(uint32Value))
-        }
-        if let uint64Value = value as? UInt64 {
-            if uint64Value <= Int64.max {
-                return .int(Int64(uint64Value))
-            } else {
-                return .string(String(uint64Value))
-            }
-        }
-
-        if let floatValue = value as? Float {
-            return floatValue.isFinite ? .double(Double(floatValue)) : .null
-        }
-        if let doubleValue = value as? Double {
-            return doubleValue.isFinite ? .double(doubleValue) : .null
-        }
-
-        if let stringValue = value as? String {
-            return .string(stringValue)
-        }
-
-        if let dateValue = value as? Date {
-            return .date(dateValue)
-        }
-
-        if let urlValue = value as? URL {
-            return .url(urlValue)
-        }
-
-        if let dataValue = value as? Data {
-            return .data(dataValue)
-        }
-
-        if let arrayValue = value as? [Any] {
-            return .array(arrayValue.map(Value.from))
-        }
-
-        if let dictionaryValue = value as? [String: Any] {
-            var object: [String: Value] = [:]
-            var keyOrder: [String] = []
-            for (key, value) in dictionaryValue {
-                if !keyOrder.contains(key) {
-                    keyOrder.append(key)
-                }
-                object[key] = Value.from(value)
-            }
-            return .object(object, keyOrder: keyOrder)
-        }
-
-        return .null
-    }
-
-    var isPrimitive: Bool {
-        switch self {
-        case .null, .bool, .int, .double, .string, .date, .url, .data:
-            return true
-        case .array, .object:
-            return false
-        }
-    }
-
-    var isArray: Bool {
-        if case .array = self { return true }
-        return false
-    }
-
-    var isArrayOfPrimitives: Bool {
-        guard let array = arrayValue else { return false }
-        return array.allSatisfy { $0.isPrimitive }
-    }
-
-    var isArrayOfArrays: Bool {
-        guard let array = arrayValue else { return false }
-        return array.allSatisfy { $0.isArray }
-    }
-
-    var isArrayOfObjects: Bool {
-        guard let array = arrayValue else { return false }
-        return array.allSatisfy { $0.isObject }
-    }
-
-    var isObject: Bool {
-        if case .object = self { return true }
-        return false
-    }
-
-    var arrayValue: [Value]? {
-        if case .array(let values) = self { return values }
-        return nil
-    }
-
-    var objectValue: (values: [String: Value], keyOrder: [String])? {
-        if case .object(let values, let keyOrder) = self { return (values, keyOrder) }
-        return nil
-    }
-
-    var stringValue: String? {
-        if case .string(let str) = self { return str }
-        return nil
-    }
-
-    var intValue: Int64? {
-        if case .int(let val) = self { return val }
-        return nil
-    }
-
-    var doubleValue: Double? {
-        if case .double(let val) = self { return val }
-        return nil
-    }
-
-    var boolValue: Bool? {
-        if case .bool(let val) = self { return val }
-        return nil
-    }
-}
-
-// MARK: -
-
-private struct IndexedCodingKey: CodingKey {
-    let stringValue: String
-    let intValue: Int?
-
-    init(stringValue: String) {
-        self.stringValue = stringValue
-        self.intValue = nil
-    }
-
-    init(intValue: Int) {
-        self.stringValue = String(intValue)
-        self.intValue = intValue
-    }
-}
+// MARK: - Number Formatter
 
 // Shared number formatter that's used to avoid scientific notation
 // and format numbers in canonical decimal form (no trailing zeros)
@@ -1542,7 +1363,7 @@ private let numberFormatter: NumberFormatter = {
     return formatter
 }()
 
-// MARK: -
+// MARK: - String Extensions
 
 private extension String {
     var escaped: String {
