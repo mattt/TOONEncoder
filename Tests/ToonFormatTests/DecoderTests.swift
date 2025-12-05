@@ -3,10 +3,10 @@ import Testing
 
 @testable import ToonFormat
 
-@Suite("TOONDecoder Tests")
-struct TOONDecoderTests {
-    let decoder = TOONDecoder()
+@Suite("Decoder Tests")
+struct DecoderTests {
     let encoder = TOONEncoder()
+    let decoder = TOONDecoder()
 
     // MARK: - Primitives
 
