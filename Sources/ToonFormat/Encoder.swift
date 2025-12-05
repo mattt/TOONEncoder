@@ -1,21 +1,21 @@
 import Foundation
 
-/// An encoder that converts Swift values to TOON format
+/// An encoder that converts Swift values into TOON format.
 ///
 /// This encoder conforms to the TOON (Token-Oriented Object Notation) specification version 3.0.
-/// For more information, see: https://github.com/toon-format/spec
+/// For more information, see https://github.com/toon-format/spec
 public final class TOONEncoder {
 
-    /// Number of spaces per indentation level
+    /// The number of spaces per indentation level.
     public var indent: Int = 2
 
-    /// Delimiter to use for array values and tabular rows
+    /// The delimiter to use for array values and tabular rows.
     public var delimiter: Delimiter = .comma
 
-    /// Optional marker to prefix array lengths in headers
+    /// An optional marker to prefix array lengths in headers.
     public var lengthMarker: LengthMarker = .none
 
-    /// Key folding mode for collapsing single-key object chains into dotted paths
+    /// Key folding mode for collapsing single-key object chains into dotted paths.
     ///
     /// When enabled, single-key nested objects like `{ a: { b: { c: 1 } } }`
     /// are collapsed into `a.b.c: 1`. Only applies when all segments are valid identifiers.
@@ -27,11 +27,11 @@ public final class TOONEncoder {
     /// ```
     public var keyFolding: KeyFolding = .disabled
 
-    /// Maximum number of segments to include in a folded path when `keyFolding` is `.safe`.
+    /// The maximum number of segments to include in a folded path when `keyFolding` is `.safe`.
     ///
     /// Controls how many nested single-key objects are collapsed into a dotted path.
-    /// - Default is `Int.max` (unlimited folding depth)
-    /// - Values less than 2 have no practical folding effect
+    /// - Default is `Int.max` (unlimited folding depth).
+    /// - Values less than 2 have no practical folding effect.
     ///
     /// Example with `flattenDepth = 2`:
     /// - Input: `{ a: { b: { c: { d: 1 } } } }`
@@ -42,16 +42,18 @@ public final class TOONEncoder {
     /// - Output: `a.b.c: 1`
     public var flattenDepth: Int = .max
 
-    /// Key folding mode
+    /// Key folding mode.
     public enum KeyFolding: Hashable, Sendable {
-        /// No key folding
+        /// No key folding.
         case disabled
 
-        /// Safe key folding: only fold when all segments are valid identifiers
+        /// Safe key folding.
+        ///
+        /// Only folds when all segments are valid identifiers.
         case safe
     }
 
-    /// Delimiter character used to separate array values and tabular row cells
+    /// The delimiter character used to separate array values and tabular row cells.
     ///
     /// The delimiter determines how multiple values are separated in inline arrays
     /// and tabular data rows.
@@ -75,20 +77,20 @@ public final class TOONEncoder {
     ///   B2|Gadget
     /// ```
     public enum Delimiter: String, CaseIterable, Hashable, Sendable {
-        /// Comma separator: `,`
+        /// Comma separator (`,`).
         case comma = ","
 
-        /// Tab separator: `\t`
+        /// Tab separator (`\t`).
         case tab = "\t"
 
-        /// Pipe separator: `|`
+        /// Pipe separator (`|`).
         case pipe = "|"
     }
 
-    /// Marker character to prefix array lengths in headers
+    /// A marker character to prefix array lengths in headers.
     ///
-    /// Length markers appear before array counts in brackets to provide
-    /// additional clarity about array sizing.
+    /// Length markers appear before array counts in brackets
+    /// to provide additional clarity about array sizing.
     ///
     /// Example with `.none`:
     /// ```toon
@@ -100,14 +102,14 @@ public final class TOONEncoder {
     /// tags[#3]: reading,gaming,coding
     /// ```
     public enum LengthMarker: CaseIterable, Hashable, Sendable {
-        /// No length marker
+        /// No length marker.
         case none
 
-        /// Hash symbol prefix: `#`
+        /// Hash symbol prefix (`#`).
         case hash
     }
 
-    /// Creates a new TOON encoder with default configuration
+    /// Creates a new TOON encoder with default configuration.
     ///
     /// Default settings:
     /// - `indent`: 2 spaces
@@ -117,11 +119,11 @@ public final class TOONEncoder {
     /// - `flattenDepth`: `Int.max`
     public init() {}
 
-    /// Encodes the given value to TOON format
+    /// Encodes the given value into TOON format.
     ///
-    /// - Parameter value: An `Encodable` value to convert to TOON format
-    /// - Returns: UTF-8 encoded data containing the TOON representation
-    /// - Throws: An error if encoding fails
+    /// - Parameter value: An `Encodable` value to convert to TOON format.
+    /// - Returns: UTF-8 encoded data containing the TOON representation.
+    /// - Throws: An error if encoding fails.
     ///
     /// This method handles special Foundation types (`Date`, `URL`, `Data`) as well as
     /// standard Swift types and custom `Encodable` types. Arrays of objects with consistent
@@ -192,12 +194,15 @@ public final class TOONEncoder {
         }
     }
 
-    /// Attempts to fold a key path by following single-key object chains
-    /// Returns the folded path, final value, and whether we hit the depth limit, or nil if folding is not safe
+    /// Attempts to fold a key path by following single-key object chains.
+    ///
+    /// Returns the folded path, final value, and whether the depth limit was reached,
+    /// or `nil` if folding is not safe.
+    ///
     /// - Parameters:
-    ///   - key: The starting key of the chain
-    ///   - value: The value associated with the key
-    ///   - siblingKeys: Other keys at the same object depth (for collision avoidance)
+    ///   - key: The starting key of the chain.
+    ///   - value: The value associated with the key.
+    ///   - siblingKeys: Other keys at the same object depth (for collision avoidance).
     private func tryFoldKeyPath(
         key: String,
         value: Value,
@@ -751,7 +756,7 @@ public final class TOONEncoder {
 // MARK: - Internal Encoder
 
 extension TOONEncoder {
-    /// Internal encoder implementation that conforms to the Encoder protocol
+    /// Internal encoder implementation that conforms to the `Encoder` protocol.
     private final class Encoder: Swift.Encoder {
         let codingPath: [any Swift.CodingKey]
         let userInfo: [CodingUserInfoKey: Any]

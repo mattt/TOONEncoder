@@ -1,6 +1,6 @@
 import Foundation
 
-/// Intermediate representation for TOON values during encoding and decoding
+/// An intermediate representation for TOON values during encoding and decoding.
 enum Value: Equatable {
     case null
     case bool(Bool)
@@ -107,7 +107,7 @@ enum Value: Equatable {
 
     // MARK: - Factory
 
-    /// Creates a value from any Encodable value
+    /// Creates a `Value` from an arbitrary value.
     static func from(_ value: Any) -> Value {
         if value is NSNull {
             return .null

@@ -1,20 +1,26 @@
 import Foundation
 
-/// A decoder that converts TOON format data to Swift values
+/// A decoder that converts TOON format data into Swift values.
 ///
 /// This decoder conforms to the TOON (Token-Oriented Object Notation) specification version 3.0.
-/// For more information, see: https://github.com/toon-format/spec
+/// For more information, see https://github.com/toon-format/spec
 public final class TOONDecoder {
-    /// Path expansion mode for dotted keys
+    /// The path expansion mode for dotted keys.
     ///
-    /// When enabled, dotted keys like `a.b.c: value` are expanded to nested objects.
-    /// This is the inverse operation of TOONEncoder's keyFolding option.
+    /// Use this property to control how the decoder interprets dotted keys
+    /// like `a.b.c: value`. When you enable path expansion, the decoder
+    /// converts dotted keys into nested objects. This is the inverse of
+    /// ``TOONEncoder/keyFolding``.
     ///
-    /// Example with `.safe` or `.automatic`:
+    /// For example, with ``PathExpansion/safe`` or ``PathExpansion/automatic``,
+    /// the following TOON input:
+    ///
     /// ```toon
     /// user.profile.name: John
     /// ```
+    ///
     /// Becomes equivalent to:
+    ///
     /// ```toon
     /// user:
     ///   profile:
@@ -22,40 +28,68 @@ public final class TOONDecoder {
     /// ```
     public var expandPaths: PathExpansion = .automatic
 
-    /// Limits for decoding to prevent resource exhaustion
+    /// Limits for decoding to prevent resource exhaustion.
     ///
     /// Use this to protect against malicious or malformed input when parsing untrusted data.
     public var limits: DecodingLimits = .default
 
-    /// Path expansion mode
+    /// Path expansion mode.
+    ///
+    /// Path expansion determines how dotted keys (e.g., `user.profile.name`) are interpreted
+    /// during decoding. This enables a more compact representation of nested data structures.
     public enum PathExpansion: Hashable, Sendable {
-        /// Automatic path expansion - expands dotted keys when they match the target type structure
-        /// Falls back gracefully if expansion causes conflicts
+        /// Automatic path expansion (default).
+        ///
+        /// Expands dotted keys when they match the target type's structure,
+        /// falling back gracefully to literal string keys if expansion causes conflicts.
+        ///
+        /// This mode is ideal when you want the convenience of path expansion
+        /// without risking decoding failures. If a dotted key like `a.b` would conflict
+        /// with an existing key `a` that isn't an object, the decoder treats `a.b`
+        /// as a literal key instead of throwing an error.
+        ///
+        /// Use this mode when decoding data that may contain a mix of dotted paths
+        /// and literal keys with dots.
         case automatic
 
-        /// No path expansion - dotted keys decoded as literal strings
+        /// No path expansion.
+        ///
+        /// Dotted keys are decoded as literal strings without any transformation.
+        /// A key like `user.profile.name` remains a single key with that exact name,
+        /// rather than being expanded into a nested `user` -> `profile` -> `name` structure.
+        ///
+        /// Use this mode when your data model uses dots in key names literally,
+        /// or when you need complete control over key interpretation.
         case disabled
 
-        /// Safe path expansion: expand dotted keys to nested objects with collision detection
-        /// Throws an error on collision
+        /// Safe path expansion with collision detection.
+        ///
+        /// Expands dotted keys into nested objects, throwing ``TOONDecodingError/pathCollision(path:line:)``
+        /// if expansion would conflict with existing keys.
+        ///
+        /// A collision occurs when a dotted path like `a.b.c` requires `a.b` to be an object,
+        /// but `a.b` already exists as a non-object value (or vice versa).
+        ///
+        /// Use this mode when you want strict validation and prefer explicit errors
+        /// over silent fallback behavior.
         case safe
     }
 
-    /// Limits for decoding to prevent resource exhaustion
+    /// Limits for decoding to prevent resource exhaustion.
     public struct DecodingLimits: Hashable, Sendable {
-        /// Maximum input size in bytes
+        /// Maximum input size in bytes.
         public var maxInputSize: Int
 
-        /// Maximum nesting depth
+        /// Maximum nesting depth.
         public var maxDepth: Int
 
-        /// Maximum number of keys in a single object
+        /// Maximum number of keys in a single object.
         public var maxObjectKeys: Int
 
-        /// Maximum array length
+        /// Maximum array length.
         public var maxArrayLength: Int
 
-        /// Default limits suitable for most use cases
+        /// Default limits suitable for most use cases.
         ///
         /// - `maxInputSize`: 10 MB
         /// - `maxDepth`: 32 (prevents stack overflow from deep nesting)
@@ -70,16 +104,15 @@ public final class TOONDecoder {
 
         /// Decoding limits that impose no restrictions.
         ///
-        /// - Warning: This configuration is unsafe for untrusted input and
-        ///   should only be used with data from trusted sources.
+        /// - Warning: This configuration is unsafe for untrusted input
+        ///   and should only be used with data from trusted sources.
         ///   Without limits, malicious input can cause excessive memory usage,
-        ///   stack overflow from deep nesting, or denial of service attacks.
+        ///   stack overflow from deep nesting, or denial-of-service attacks.
         ///
-        /// Use this only when you have full control over the input data and
-        /// need to decode arbitrarily large or complex TOON structures.
+        /// Use this only when you have full control over the input data
+        /// and need to decode arbitrarily large or complex TOON structures.
         ///
-        /// For production use with external input, use
-        /// ``default`` or
+        /// For production use with external input, use ``default`` or
         /// ``init(maxInputSize:maxDepth:maxObjectKeys:maxArrayLength:)``
         /// with appropriate limits instead.
         public static let unlimited = DecodingLimits(
@@ -97,20 +130,20 @@ public final class TOONDecoder {
         }
     }
 
-    /// Creates a new TOON decoder with default configuration
+    /// Creates a new TOON decoder with default configuration.
     ///
     /// Default settings:
     /// - `expandPaths`: `.automatic`
     /// - `limits`: `.default`
     public init() {}
 
-    /// Decodes TOON format data to the specified type
+    /// Decodes TOON format data into the specified type.
     ///
     /// - Parameters:
-    ///   - type: The type to decode to
-    ///   - data: UTF-8 encoded TOON data
-    /// - Returns: The decoded value
-    /// - Throws: `TOONDecodingError` if decoding fails
+    ///   - type: The type to decode into.
+    ///   - data: UTF-8 encoded TOON data.
+    /// - Returns: The decoded value.
+    /// - Throws: ``TOONDecodingError`` if decoding fails.
     public func decode<T: Decodable>(_: T.Type, from data: Data) throws -> T {
         if data.count > limits.maxInputSize {
             throw TOONDecodingError.inputTooLarge(size: data.count, limit: limits.maxInputSize)
@@ -130,51 +163,51 @@ public final class TOONDecoder {
 
 // MARK: - Decoding Errors
 
-/// Errors that can occur during TOON decoding
+/// Errors that can occur during TOON decoding.
 public enum TOONDecodingError: Error, Equatable {
-    /// The input data is not valid UTF-8 or has invalid structure
+    /// The input data is not valid UTF-8 or has an invalid structure.
     case invalidFormat(String)
 
-    /// Invalid indentation at the specified line
+    /// Invalid indentation at the specified line.
     case invalidIndentation(line: Int, message: String)
 
-    /// Invalid escape sequence in a string
+    /// Invalid escape sequence in a string.
     case invalidEscapeSequence(String)
 
-    /// Array count doesn't match declared length
+    /// Array element count doesn't match the declared length.
     case countMismatch(expected: Int, actual: Int, line: Int)
 
-    /// Row field count doesn't match header field count
+    /// Row field count doesn't match the header field count.
     case fieldCountMismatch(expected: Int, actual: Int, line: Int)
 
-    /// Unexpected blank line inside array/tabular block
+    /// Unexpected blank line inside an array or tabular block.
     case unexpectedBlankLine(line: Int)
 
-    /// Invalid array header format
+    /// Invalid array header format.
     case invalidHeader(String)
 
-    /// Type mismatch during decoding
+    /// Type mismatch during decoding.
     case typeMismatch(expected: String, actual: String)
 
-    /// Required key not found in object
+    /// Required key not found in the object.
     case keyNotFound(String)
 
-    /// Data is corrupted or invalid
+    /// Data is corrupted or invalid.
     case dataCorrupted(String)
 
-    /// Path expansion collision detected
+    /// Path expansion collision detected.
     case pathCollision(path: String, line: Int)
 
-    /// Input size exceeds limit
+    /// Input size exceeds the limit.
     case inputTooLarge(size: Int, limit: Int)
 
-    /// Nesting depth exceeds limit
+    /// Nesting depth exceeds the limit.
     case depthLimitExceeded(depth: Int, limit: Int)
 
-    /// Object has too many keys
+    /// Object has too many keys.
     case objectKeyLimitExceeded(count: Int, limit: Int)
 
-    /// Array length exceeds limit
+    /// Array length exceeds the limit.
     case arrayLengthLimitExceeded(length: Int, limit: Int)
 }
 
@@ -1075,7 +1108,7 @@ private final class Parser {
 // MARK: - Internal Decoder
 
 extension TOONDecoder {
-    /// Internal decoder implementation that conforms to the Decoder protocol
+    /// Internal decoder implementation that conforms to the `Decoder` protocol.
     private final class Decoder: Swift.Decoder {
         let value: Value
         let codingPath: [CodingKey]
