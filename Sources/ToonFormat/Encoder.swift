@@ -1365,7 +1365,7 @@ private let numberFormatter: NumberFormatter = {
 
 // MARK: - String Extensions
 
-extension String {
+private extension String {
     var escaped: String {
         return
             replacingOccurrences(of: "\\", with: "\\\\")
@@ -1375,7 +1375,7 @@ extension String {
             .replacingOccurrences(of: "\t", with: "\\t")
     }
 
-    fileprivate var isNumericLike: Bool {
+    var isNumericLike: Bool {
         // Match numbers like: 42, -3.14, 1e-6, 05, etc.
         return range(
             of: #"^-?\d+(?:\.\d+)?(?:e[+-]?\d+)?$"#,
@@ -1384,7 +1384,7 @@ extension String {
             || range(of: #"^0\d+$"#, options: .regularExpression) != nil
     }
 
-    fileprivate var isPaddedWithWhitespace: Bool {
+    var isPaddedWithWhitespace: Bool {
         return self != trimmingCharacters(in: .whitespaces)
     }
 
