@@ -168,34 +168,6 @@ items[2|]{sku|name|qty|price}:
   B2|Gadget|1|14.5
 ```
 
-#### Length Markers
-
-Add a `#` prefix to array lengths for emphasis and readability:
-
-```swift
-let data = [
-    "tags": ["reading", "gaming", "coding"],
-    "items": [
-        ["sku": "A1", "qty": 2, "price": 9.99],
-        ["sku": "B2", "qty": 1, "price": 14.5]
-    ]
-]
-
-let encoder = TOONEncoder()
-encoder.lengthMarker = .hash
-
-let output = try encoder.encode(data)
-```
-
-Output:
-
-```
-tags[#3]: reading,gaming,coding
-items[#2]{sku,qty,price}:
-  A1,2,9.99
-  B2,1,14.5
-```
-
 #### Tabular Arrays
 
 Arrays of objects with identical primitive fields use an efficient tabular format:

@@ -963,17 +963,18 @@ struct DecoderTests {
         #expect(result.items[0].price == 9.99)
     }
 
-    // MARK: - Length Marker Option
+    // MARK: - Length Marker Rejection
 
-    @Test func lengthMarkerHash() async throws {
+    @Test func lengthMarkerHashRejected() async throws {
         struct LengthMarkerTestObject: Codable, Equatable {
             let tags: [String]
         }
 
         let toon = "tags[#3]: reading,gaming,coding"
         let data = toon.data(using: .utf8)!
-        let result = try decoder.decode(LengthMarkerTestObject.self, from: data)
-        #expect(result.tags == ["reading", "gaming", "coding"])
+        #expect(throws: Error.self) {
+            _ = try decoder.decode(LengthMarkerTestObject.self, from: data)
+        }
     }
 
     // MARK: - Non-JSON Types
@@ -1455,20 +1456,6 @@ struct DecoderTests {
         let original = DelimiterObject(tags: ["reading", "gaming", "coding"])
         let encoded = try encoder.encode(original)
         let decoded = try decoder.decode(DelimiterObject.self, from: encoded)
-        #expect(original == decoded)
-    }
-
-    @Test func roundTripLengthMarker() async throws {
-        struct LengthMarkerObject: Codable, Equatable {
-            let tags: [String]
-        }
-
-        let encoder = TOONEncoder()
-        encoder.lengthMarker = .hash
-
-        let original = LengthMarkerObject(tags: ["reading", "gaming", "coding"])
-        let encoded = try encoder.encode(original)
-        let decoded = try decoder.decode(LengthMarkerObject.self, from: encoded)
         #expect(original == decoded)
     }
 
